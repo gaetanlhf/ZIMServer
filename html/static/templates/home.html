@@ -1,0 +1,127 @@
+{{define "title"}}Home{{end}}
+
+{{define "body"}}
+<header>
+    <div class="scroll-fade scroll-fade-left"></div>
+    <div class="scroll-fade scroll-fade-right"></div>
+    <div class="filters">
+        <select id="languageFilter" onchange="filterArchives()">
+            <option value="">All languages</option>
+            {{range .Languages}}
+            <option value="{{.Code}}">{{.Name}}</option>
+            {{end}}
+        </select>
+        <select id="categoryFilter" onchange="filterArchives()">
+            <option value="">All categories</option>
+            {{range .Categories}}
+            <option value="{{.}}">{{.}}</option>
+            {{end}}
+        </select>
+        <div class="search-container">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+            </svg>
+            <input type="text" id="searchBox" placeholder="Search..." oninput="filterArchives()">
+            <button class="clear-search" id="clearSearch" onclick="clearSearch()">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                </svg>
+            </button>
+        </div>
+        <div class="spacer"></div>
+        <button class="icon-btn" onclick="toggleModal()" title="About">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+            </svg>
+        </button>
+    </div>
+</header>
+<div class="container">
+    <div class="count" id="archiveCount">{{.Count}} {{if eq .Count 1}}archive{{else}}archives{{end}}</div>
+
+    {{if .Archives}}
+    <div class="archives" id="archivesList">
+        {{range .Archives}}
+        <a href="/viewer/{{.Name}}/" class="archive-card"
+           data-language="{{.Metadata.LanguageCode}}"
+           data-category="{{.Metadata.Category}}"
+           data-tags="{{.Metadata.Tags}}"
+           data-title="{{.Metadata.Title}}"
+           data-description="{{.Metadata.Description}}">
+            <div class="archive-header">
+                <div class="archive-icon">
+                    <img src="/content/{{.Name}}/favicon.ico"
+                         alt="{{.Metadata.Title}}"
+                         onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27%23666%27%3E%3Cpath d=%27M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z%27/%3E%3C/svg%3E'">
+                </div>
+                <div class="archive-main">
+                    <div class="archive-title-row">
+                        <div class="archive-title">{{.Metadata.Title}}</div>
+                        <div class="language-badge">{{.Metadata.LanguageCode}}</div>
+                    </div>
+                    {{if .Metadata.Creator}}
+                    <div class="archive-creator">{{.Metadata.Creator}}</div>
+                    {{end}}
+                    {{if .Metadata.Description}}
+                    <div class="archive-description">{{.Metadata.Description}}</div>
+                    {{end}}
+                </div>
+            </div>
+            <div class="archive-footer">
+                <div class="footer-item">
+                    <span class="footer-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+                        </svg>
+                    </span>
+                    <span>{{.Metadata.EntryCount}} articles</span>
+                </div>
+                {{if .Metadata.Date}}
+                <div class="footer-item">
+                    <span class="footer-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
+                        </svg>
+                    </span>
+                    <span>{{.Metadata.Date}}</span>
+                </div>
+                {{end}}
+                {{if .Metadata.Category}}
+                <div class="footer-item">
+                    <span class="footer-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/>
+                        </svg>
+                    </span>
+                    <span>{{.Metadata.Category}}</span>
+                </div>
+                {{end}}
+            </div>
+        </a>
+        {{end}}
+    </div>
+    {{else}}
+    <div class="empty-state">
+        <h2>No archives available</h2>
+        <p>Are the ZIM files present and/or accessible?</p>
+    </div>
+    {{end}}
+</div>
+
+<div class="modal" id="infoModal">
+    <div class="modal-content">
+        <span class="modal-close" onclick="toggleModal()">✕</span>
+        <div class="modal-header">About ZIMServer</div>
+        <div class="modal-body">
+            <p><strong>ZIMServer</strong> is a web server for ZIM files.</p>
+            <p><strong>Version:</strong> {{if .Version}}{{.Version}}{{else}}dev{{end}}</p>
+            <p><strong>Loaded archives:</strong> {{.Count}}</p>
+            <p>ZIM files allow you to access content offline, such as Wikipedia.</p>
+        </div>
+    </div>
+</div>
+{{end}}
+
+{{define "scripts"}}
+<script src="/assets/js/home.js"></script>
+{{end}}

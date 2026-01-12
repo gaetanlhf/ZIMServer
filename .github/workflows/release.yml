@@ -1,0 +1,224 @@
+name: Build and Release
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+jobs:
+  build:
+    name: Build ${{ matrix.asset_prefix }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        goarch: [amd64, 386, arm64, arm]
+        include:
+          - os: ubuntu-latest
+            goarch: amd64
+            asset_prefix: linux-amd64
+            asset_ext: ""
+          - os: ubuntu-latest
+            goarch: 386
+            asset_prefix: linux-i386
+            asset_ext: ""
+          - os: ubuntu-latest
+            goarch: arm64
+            asset_prefix: linux-arm64
+            asset_ext: ""
+          - os: ubuntu-latest
+            goarch: arm
+            goarm: 7
+            asset_prefix: linux-armv7
+            asset_ext: ""
+
+          - os: macos-latest
+            goarch: amd64
+            asset_prefix: darwin-amd64
+            asset_ext: ""
+          - os: macos-latest
+            goarch: arm64
+            asset_prefix: darwin-arm64
+            asset_ext: ""
+
+          - os: windows-latest
+            goarch: amd64
+            asset_prefix: windows-amd64
+            asset_ext: .exe
+          - os: windows-latest
+            goarch: 386
+            asset_prefix: windows-i386
+            asset_ext: .exe
+          - os: windows-latest
+            goarch: arm64
+            asset_prefix: windows-arm64
+            asset_ext: .exe
+
+        exclude:
+          - os: macos-latest
+            goarch: 386
+          - os: macos-latest
+            goarch: arm
+          - os: windows-latest
+            goarch: arm
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+
+      - name: Extract Version
+        id: get_version
+        shell: bash
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Build
+        env:
+          GOOS: ${{ matrix.os == 'windows-latest' && 'windows' || matrix.os == 'macos-latest' && 'darwin' || 'linux' }}
+          GOARCH: ${{ matrix.goarch }}
+          GOARM: ${{ matrix.goarm }}
+          VERSION_STRING: ${{ steps.get_version.outputs.VERSION }}
+        shell: bash
+        run: |
+          go mod download
+          FILE_NAME=zimserver-${{ matrix.asset_prefix }}${{ matrix.asset_ext }}
+          CGO_ENABLED=0 go build -ldflags="-s -w -X 'main.version=$VERSION_STRING'" -o $FILE_NAME ./cmd/zimserver
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: zimserver-${{ matrix.asset_prefix }}-${{ steps.get_version.outputs.VERSION }}
+          path: zimserver-${{ matrix.asset_prefix }}${{ matrix.asset_ext }}
+          if-no-files-found: error
+          retention-days: 1
+
+  changelog:
+    name: Generate Changelog
+    runs-on: ubuntu-latest
+    needs: build
+    outputs:
+      changelog: ${{ steps.github_release.outputs.changelog }}
+      version: ${{ steps.get_version.outputs.VERSION }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract Version
+        id: get_version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Build Changelog
+        id: github_release
+        uses: mikepenz/release-changelog-builder-action@v5
+        with:
+          failOnError: true
+          commitMode: true
+          configurationJson: |
+            {
+              "template": "#{{CHANGELOG}}\n\n<h3>Statistics</h3>\n\n- <b>Number of commits</b>: #{{COMMITS}}\n- <b>Number of changed files</b>: #{{CHANGED_FILES}}\n- <b>Added lines</b>: #{{ADDITIONS}}\n- <b>Deleted lines</b>: #{{DELETIONS}}",
+              "pr_template": "#{{TITLE}} (#{{MERGE_SHA}})",
+              "base_branches": ["main"],
+              "tag_resolver": {
+                "method": "sort"
+              },
+              "categories": [
+                {
+                    "title": "## 🦾 Features",
+                    "labels": ["feat"]
+                },
+                {
+                    "title": "## 🐛 Fixes",
+                    "labels": ["fix"]
+                },
+                {
+                    "title": "## 🚀 Performance",
+                    "labels": ["perf"]
+                },
+                {
+                    "title": "## 📘 Documentation",
+                    "labels": ["docs"]
+                },
+                {
+                    "title": "## 🏗️ Refactorings",
+                    "labels": ["refactor"]
+                },
+                {
+                    "title": "## 🤖 CI",
+                    "labels": ["ci"]
+                },
+                {
+                    "title": "## ⚒️ Build",
+                    "labels": ["build"]
+                },
+                {
+                    "title": "## ⏱️ Tests",
+                    "labels": ["test"]
+                },
+                {
+                    "title": "## 🎨 Style",
+                    "labels": ["style"]
+                },
+                {
+                    "title": "## 🧹 Chore",
+                    "labels": ["chore"]
+                },
+                {
+                    "title": "## ↩️ Reverted",
+                    "labels": ["revert"]
+                },
+                {
+                    "title": "## ❔ Uncategorized",
+                    "labels": []
+                }
+              ],
+              "label_extractor": [
+                {
+                    "pattern": "(.+):(.+)",
+                    "target": "$1",
+                    "on_property": "title"
+                }
+              ],
+              "transformers": [
+                {
+                  "pattern": "(.+):(.+)",
+                  "target": "-$2"
+                }
+              ]
+            }
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: changelog
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: zimserver-*-${{ needs.changelog.outputs.version }}
+          path: artifacts
+          merge-multiple: true
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*
+          tag_name: ${{ github.ref }}
+          name: ZIMServer ${{ needs.changelog.outputs.version }}
+          body: ${{ needs.changelog.outputs.changelog }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
