@@ -31,7 +31,9 @@ function init(archive) {
 
             iframeDoc.addEventListener('click', function() {
                 const searchResults = document.getElementById('searchResults');
-                searchResults.classList.remove('active');
+                if (searchResults) {
+                    searchResults.classList.remove('active');
+                }
             });
 
             fixIframeURLs(iframeDoc);
@@ -48,8 +50,10 @@ function init(archive) {
         const searchInput = document.getElementById('searchInput');
         const searchContainer = document.getElementById('searchContainer');
 
-        if (!searchContainer.contains(e.target) && !searchResults.contains(e.target)) {
-            searchResults.classList.remove('active');
+        if (searchContainer && searchResults) {
+            if (!searchContainer.contains(e.target) && !searchResults.contains(e.target)) {
+                searchResults.classList.remove('active');
+            }
         }
     });
 
@@ -63,9 +67,11 @@ function init(archive) {
     });
 
     const searchInput = document.getElementById('searchInput');
-    searchInput.addEventListener('input', function() {
-        updateClearButton();
-    });
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            updateClearButton();
+        });
+    }
 
     positionSearchResults();
 }
@@ -183,16 +189,20 @@ function updateClearButton() {
     const searchInput = document.getElementById('searchInput');
     const clearBtn = document.getElementById('clearSearchBtn');
 
-    if (searchInput.value) {
-        clearBtn.classList.add('visible');
-    } else {
-        clearBtn.classList.remove('visible');
+    if (searchInput && clearBtn) {
+        if (searchInput.value) {
+            clearBtn.classList.add('visible');
+        } else {
+            clearBtn.classList.remove('visible');
+        }
     }
 }
 
 function showSearchResults() {
     const searchResults = document.getElementById('searchResults');
     const searchInput = document.getElementById('searchInput');
+
+    if (!searchResults || !searchInput) return;
 
     positionSearchResults();
 
@@ -207,11 +217,13 @@ function clearSearch() {
     const searchResults = document.getElementById('searchResults');
     const searchLoading = document.getElementById('searchLoading');
 
-    searchInput.value = '';
-    clearBtn.classList.remove('visible');
-    searchResults.classList.remove('active');
-    searchResults.innerHTML = '';
-    searchLoading.classList.remove('active');
+    if (searchInput) searchInput.value = '';
+    if (clearBtn) clearBtn.classList.remove('visible');
+    if (searchResults) {
+        searchResults.classList.remove('active');
+        searchResults.innerHTML = '';
+    }
+    if (searchLoading) searchLoading.classList.remove('active');
     lastSearchResults = '';
 }
 
@@ -243,7 +255,9 @@ function loadHome() {
     iframe.src = '/content/' + archiveName + '/';
 
     const searchResults = document.getElementById('searchResults');
-    searchResults.classList.remove('active');
+    if (searchResults) {
+        searchResults.classList.remove('active');
+    }
 }
 
 function loadPage(path) {
@@ -256,7 +270,9 @@ function loadPage(path) {
     iframe.src = '/content/' + archiveName + '/' + path;
 
     const searchResults = document.getElementById('searchResults');
-    searchResults.classList.remove('active');
+    if (searchResults) {
+        searchResults.classList.remove('active');
+    }
 }
 
 function loadRandom() {
@@ -281,23 +297,26 @@ function searchArticles(query) {
     const resultsDiv = document.getElementById('searchResults');
     const clearBtn = document.getElementById('clearSearchBtn');
     const searchLoading = document.getElementById('searchLoading');
+    const searchInput = document.getElementById('searchInput');
+
+    if (!resultsDiv) return;
 
     if (!query || query.length < 2) {
         resultsDiv.classList.remove('active');
-        searchLoading.classList.remove('active');
+        if (searchLoading) searchLoading.classList.remove('active');
         lastSearchResults = '';
         return;
     }
 
     searchTimeout = setTimeout(() => {
-        clearBtn.classList.remove('visible');
-        searchLoading.classList.add('active');
+        if (clearBtn) clearBtn.classList.remove('visible');
+        if (searchLoading) searchLoading.classList.add('active');
 
         fetch('/api/' + archiveName + '/search?q=' + encodeURIComponent(query) + '&limit=10')
             .then(res => res.json())
             .then(data => {
-                searchLoading.classList.remove('active');
-                if (document.getElementById('searchInput').value) {
+                if (searchLoading) searchLoading.classList.remove('active');
+                if (searchInput && searchInput.value && clearBtn) {
                     clearBtn.classList.add('visible');
                 }
 
@@ -317,8 +336,8 @@ function searchArticles(query) {
             })
             .catch(err => {
                 console.error('Search error:', err);
-                searchLoading.classList.remove('active');
-                if (document.getElementById('searchInput').value) {
+                if (searchLoading) searchLoading.classList.remove('active');
+                if (searchInput && searchInput.value && clearBtn) {
                     clearBtn.classList.add('visible');
                 }
                 resultsDiv.classList.remove('active');

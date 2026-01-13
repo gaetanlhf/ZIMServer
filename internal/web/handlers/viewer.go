@@ -21,6 +21,7 @@ type ViewerData struct {
 	EntryPath    string
 	FaviconURL   string
 	FaviconType  string
+	HasIndex     bool
 }
 
 func (h *ViewerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -71,12 +72,15 @@ func (h *ViewerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	faviconURL, faviconType := h.FaviconService.GetFaviconInfo(archive, archiveName)
 
+	hasIndex := archive.IndexMgr != nil
+
 	data := ViewerData{
 		ArchiveName:  archiveName,
 		ArchiveTitle: archive.Metadata.Title,
 		EntryPath:    entryPath,
 		FaviconURL:   faviconURL,
 		FaviconType:  faviconType,
+		HasIndex:     hasIndex,
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
