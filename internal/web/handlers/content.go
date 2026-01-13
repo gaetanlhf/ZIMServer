@@ -23,7 +23,6 @@ var timeZero = time.Time{}
 func (h *ContentHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	originalPath := r.URL.Path
 	path := strings.TrimPrefix(originalPath, "/content/")
-	path = strings.TrimSuffix(path, "/")
 
 	if path != "" && !strings.Contains(path, "/") {
 		if !strings.HasSuffix(originalPath, "/") {

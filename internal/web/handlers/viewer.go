@@ -27,7 +27,6 @@ type ViewerData struct {
 func (h *ViewerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	originalPath := r.URL.Path
 	path := strings.TrimPrefix(originalPath, "/viewer/")
-	path = strings.TrimSuffix(path, "/")
 
 	if path != "" && !strings.Contains(path, "/") {
 		if !strings.HasSuffix(originalPath, "/") {
