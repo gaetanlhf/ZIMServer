@@ -112,42 +112,45 @@ function positionSearchResults() {
 function fixIframeURLs(iframeDoc) {
     try {
         const links = iframeDoc.querySelectorAll('a');
+        const currentIframeUrl = iframeDoc.defaultView ? iframeDoc.defaultView.location.href : iframeDoc.URL;
+
         links.forEach(link => {
             const handleLinkClick = function(e) {
-                const href = this.getAttribute('href');
-                if (!href) return;
+                const hrefAttr = this.getAttribute('href');
+                if (!hrefAttr) return;
 
-                if (href.startsWith('http') || href.startsWith('https') || href.startsWith('mailto:')) {
+                if (hrefAttr.startsWith('http://') || hrefAttr.startsWith('https://') || hrefAttr.startsWith('mailto:')) {
                     if (!this.target || this.target === '_self') {
                         this.target = '_blank';
                     }
                     return;
                 }
 
-                if (href.startsWith('#') || href.startsWith('javascript:')) {
+                if (hrefAttr.startsWith('#') || hrefAttr.startsWith('javascript:')) {
                     return;
                 }
 
                 e.preventDefault();
 
-                let newPath = href;
-                if (href.startsWith('/')) {
-                    newPath = href.substring(1);
-                } else if (href.startsWith('./')) {
-                    newPath = href.substring(2);
-                } else if (href.startsWith('../')) {
-                    const currentPath = window.location.pathname;
-                    const pathParts = currentPath.split('/').filter(p => p);
-                    let goBack = (href.match(/\.\.\//g) || []).length;
-                    newPath = href.replace(/\.\.\//g, '');
-
-                    if (pathParts.length > 3 + goBack) {
-                        pathParts.splice(pathParts.length - goBack - 1, goBack);
-                        newPath = pathParts.slice(3).join('/') + '/' + newPath;
+                try {
+                    const urlObj = new URL(hrefAttr, currentIframeUrl);
+                    
+                    if (urlObj.origin === window.location.origin) {
+                        const prefix = '/content/' + archiveName + '/';
+                        if (urlObj.pathname.startsWith(prefix)) {
+                            let relativePath = urlObj.pathname.substring(prefix.length);
+                            relativePath += urlObj.search + urlObj.hash;
+                            loadPage(relativePath);
+                        } else {
+                            window.location.href = urlObj.href;
+                        }
+                    } else {
+                        window.open(urlObj.href, '_blank');
                     }
+                } catch (err) {
+                    console.error("Error parsing URL:", err);
+                    loadPage(hrefAttr);
                 }
-
-                loadPage(newPath);
             };
 
             link.removeEventListener('click', handleLinkClick);
