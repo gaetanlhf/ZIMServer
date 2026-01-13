@@ -78,6 +78,8 @@ jobs:
         shell: bash
         run: |
           VERSION=${GITHUB_REF#refs/tags/v}
+          VERSION=${VERSION#refs/heads/}
+          VERSION=${VERSION//\//-}
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Build
@@ -116,6 +118,8 @@ jobs:
         id: get_version
         run: |
           VERSION=${GITHUB_REF#refs/tags/v}
+          VERSION=${VERSION#refs/heads/}
+          VERSION=${VERSION//\//-}
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Build Changelog
