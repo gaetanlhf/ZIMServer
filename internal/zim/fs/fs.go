@@ -63,8 +63,6 @@ func (zfs *ZIMFS) serveZimEntry(name string) (fs.File, error) {
 		return nil, os.ErrNotExist
 	}
 
-	// Résoudre automatiquement les redirections lors de l'ouverture
-	// (pour que Open() retourne toujours le contenu final)
 	resolvedEntry, err := zfs.reader.ResolveRedirect(entry)
 	if err != nil {
 		return nil, err

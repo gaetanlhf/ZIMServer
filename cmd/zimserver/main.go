@@ -27,7 +27,7 @@ const (
 
 func main() {
 	tempSet := flag.NewFlagSet("", flag.ContinueOnError)
-	tempSet.Usage = func() {} // Disable default usage
+	tempSet.Usage = func() {}
 	showHelp := tempSet.Bool("h", false, "Show this help message")
 	tempSet.Bool("help", false, "Show this help message")
 	showVersion := tempSet.Bool("v", false, "Show version")
