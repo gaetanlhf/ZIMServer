@@ -103,8 +103,15 @@ func (h *ContentHandler) handleResource(w http.ResponseWriter, r *http.Request, 
 	}
 	defer file.Close()
 
-	mimeType := utils.GuessMimeType(resourcePath)
+	mimeType, _ := archive.Reader.GetMimeType(entry)
+	if mimeType == "" {
+		mimeType = utils.GuessMimeType(resourcePath)
+	}
+
 	if mimeType != "" {
+		if mimeType == "text/html" && !strings.Contains(mimeType, "charset") {
+			mimeType += "; charset=utf-8"
+		}
 		w.Header().Set("Content-Type", mimeType)
 	}
 
