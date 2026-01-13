@@ -7,4 +7,4 @@ require (
 	github.com/ulikunitz/xz v0.5.15
 )
 
-require golang.org/x/text v0.31.0
+require golang.org/x/text v0.33.0
