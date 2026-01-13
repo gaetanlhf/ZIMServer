@@ -1,0 +1,83 @@
+name: Check
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build ${{ matrix.asset_prefix }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        goarch: [amd64, 386, arm64, arm]
+        include:
+          - os: ubuntu-latest
+            goarch: amd64
+            asset_prefix: linux-amd64
+            asset_ext: ""
+          - os: ubuntu-latest
+            goarch: 386
+            asset_prefix: linux-i386
+            asset_ext: ""
+          - os: ubuntu-latest
+            goarch: arm64
+            asset_prefix: linux-arm64
+            asset_ext: ""
+          - os: ubuntu-latest
+            goarch: arm
+            goarm: 7
+            asset_prefix: linux-armv7
+            asset_ext: ""
+
+          - os: macos-latest
+            goarch: amd64
+            asset_prefix: darwin-amd64
+            asset_ext: ""
+          - os: macos-latest
+            goarch: arm64
+            asset_prefix: darwin-arm64
+            asset_ext: ""
+
+          - os: windows-latest
+            goarch: amd64
+            asset_prefix: windows-amd64
+            asset_ext: .exe
+          - os: windows-latest
+            goarch: 386
+            asset_prefix: windows-i386
+            asset_ext: .exe
+          - os: windows-latest
+            goarch: arm64
+            asset_prefix: windows-arm64
+            asset_ext: .exe
+
+        exclude:
+          - os: macos-latest
+            goarch: 386
+          - os: macos-latest
+            goarch: arm
+          - os: windows-latest
+            goarch: arm
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+
+      - name: Build
+        env:
+          GOOS: ${{ matrix.os == 'windows-latest' && 'windows' || matrix.os == 'macos-latest' && 'darwin' || 'linux' }}
+          GOARCH: ${{ matrix.goarch }}
+          GOARM: ${{ matrix.goarm }}
+          VERSION_STRING: dev
+        shell: bash
+        run: |
+          go mod download
+          FILE_NAME=zimserver-${{ matrix.asset_prefix }}${{ matrix.asset_ext }}
+          CGO_ENABLED=0 go build -ldflags="-s -w -X 'main.version=$VERSION_STRING'" -o $FILE_NAME ./cmd/zimserver
