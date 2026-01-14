@@ -52,49 +52,7 @@ func (idx *Index) GetEntry(position int) (zimreader.DirectoryEntry, error) {
 }
 
 func (idx *Index) Search(query string, maxResults int) ([]SearchResult, error) {
-	query = strings.ToLower(strings.TrimSpace(query))
-	if query == "" {
-		return nil, fmt.Errorf("empty query")
-	}
-
-	results := make([]SearchResult, 0, maxResults*2)
-	seen := make(map[string]bool)
-
-	for i, entryIndex := range idx.entries {
-		entry, err := idx.reader.GetEntryByIndex(entryIndex)
-		if err != nil {
-			continue
-		}
-
-		resolvedEntry, err := idx.reader.ResolveRedirect(entry)
-		if err != nil {
-			continue
-		}
-
-		title := strings.ToLower(entry.GetTitle())
-		path := strings.ToLower(entry.GetPath())
-
-		score := calculateScore(query, title, path)
-		if score > 0 {
-			key := string(resolvedEntry.GetNamespace()) + resolvedEntry.GetPath()
-			if !seen[key] {
-				seen[key] = true
-				results = append(results, SearchResult{
-					Index: uint32(i),
-					Entry: resolvedEntry,
-					Score: score,
-				})
-			}
-		}
-	}
-
-	sortResultsByScore(results)
-
-	if len(results) > maxResults {
-		results = results[:maxResults]
-	}
-
-	return results, nil
+	return idx.SearchByTitle(query, maxResults)
 }
 
 func (idx *Index) SearchByTitle(titlePrefix string, maxResults int) ([]SearchResult, error) {
@@ -103,12 +61,20 @@ func (idx *Index) SearchByTitle(titlePrefix string, maxResults int) ([]SearchRes
 		return nil, fmt.Errorf("empty title prefix")
 	}
 
-	results := make([]SearchResult, 0, maxResults)
+	capacity := maxResults
+	if capacity <= 0 {
+		capacity = 100
+	}
+	results := make([]SearchResult, 0, capacity)
 	seen := make(map[string]bool)
 
 	start := idx.binarySearchTitle(titlePrefix)
 
-	for i := start; i < len(idx.entries) && len(results) < maxResults; i++ {
+	for i := start; i < len(idx.entries); i++ {
+		if maxResults > 0 && len(results) >= maxResults {
+			break
+		}
+
 		entry, err := idx.reader.GetEntryByIndex(idx.entries[i])
 		if err != nil {
 			continue
