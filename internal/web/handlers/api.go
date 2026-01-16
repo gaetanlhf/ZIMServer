@@ -74,8 +74,12 @@ func (h *APIHandler) handleSearch(w http.ResponseWriter, r *http.Request, archiv
 
 	limit := 10
 	if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
-		if l, err := strconv.Atoi(limitStr); err == nil && l > 0 && l <= 50 {
-			limit = l
+		if l, err := strconv.Atoi(limitStr); err == nil {
+			if l == -1 {
+				limit = -1
+			} else if l > 0 {
+				limit = l
+			}
 		}
 	}
 

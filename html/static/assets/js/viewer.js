@@ -315,7 +315,7 @@ function searchArticles(query) {
         if (clearBtn) clearBtn.classList.remove('visible');
         if (searchLoading) searchLoading.classList.add('active');
 
-        fetch('/api/' + archiveName + '/search?q=' + encodeURIComponent(query) + '&limit=10')
+        fetch('/api/' + archiveName + '/search?q=' + encodeURIComponent(query) + '&limit=-1')
             .then(res => res.json())
             .then(data => {
                 if (searchLoading) searchLoading.classList.remove('active');
@@ -326,9 +326,11 @@ function searchArticles(query) {
                 positionSearchResults();
 
                 if (data.results && data.results.length > 0) {
-                    lastSearchResults = data.results.map(result =>
-                        `<div class="search-result-item" onclick="loadPage('${result.path}')">${result.title}</div>`
-                    ).join('');
+                    lastSearchResults = data.results.map(result => {
+                        const safePath = result.path.replace(/'/g, "\\'");
+                        const safeTitle = result.title.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                        return `<div class="search-result-item" onclick="loadPage('${safePath}')">${safeTitle}</div>`;
+                    }).join('');
                     resultsDiv.innerHTML = lastSearchResults;
                     resultsDiv.classList.add('active');
                 } else {

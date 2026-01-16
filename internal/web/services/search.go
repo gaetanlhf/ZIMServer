@@ -46,8 +46,12 @@ func (s *SearchService) HandleSearch(w http.ResponseWriter, r *http.Request, arc
 
 	maxResults := 20
 	if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
-		if limit, err := strconv.Atoi(limitStr); err == nil && limit > 0 && limit <= 100 {
-			maxResults = limit
+		if limit, err := strconv.Atoi(limitStr); err == nil {
+			if limit == -1 {
+				maxResults = -1
+			} else if limit > 0 {
+				maxResults = limit
+			}
 		}
 	}
 
