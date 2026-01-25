@@ -74,6 +74,33 @@ function init(archive) {
     }
 
     positionSearchResults();
+
+    window.addEventListener('popstate', function(event) {
+        const path = window.location.pathname;
+        
+        if (path.startsWith('/viewer/' + archiveName + '/')) {
+            const entryPath = path.substring(('/viewer/' + archiveName + '/').length);
+            showSpinner();
+            setIframeLocation('/content/' + archiveName + '/' + entryPath);
+        } else if (path.startsWith('/catch')) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const externalUrl = urlParams.get('url');
+            if (externalUrl) {
+                showSpinner();
+                setIframeLocation('/catch?url=' + encodeURIComponent(externalUrl));
+            }
+        }
+    });
+}
+
+function setIframeLocation(url) {
+    const iframe = document.getElementById('contentFrame');
+    try {
+        iframe.contentWindow.location.replace(url);
+    } catch (e) {
+        console.log('Error using location.replace, falling back to src:', e);
+        iframe.src = url;
+    }
 }
 
 function updateBrowserURL() {
@@ -89,6 +116,15 @@ function updateBrowserURL() {
 
                 if (window.location.pathname !== newUrl) {
                     history.replaceState(null, '', newUrl);
+                }
+            } else if (iframePath.startsWith('/catch')) {
+                const urlParams = new URLSearchParams(iframe.contentWindow.location.search);
+                const externalUrl = urlParams.get('url');
+                if (externalUrl) {
+                    const newUrl = '/catch?viewer=' + encodeURIComponent(archiveName) + '&url=' + encodeURIComponent(externalUrl);
+                    if (window.location.pathname + window.location.search !== newUrl) {
+                        history.replaceState(null, '', newUrl);
+                    }
                 }
             }
         }
@@ -115,11 +151,25 @@ function fixIframeURLs(iframeDoc) {
         const currentIframeUrl = iframeDoc.defaultView ? iframeDoc.defaultView.location.href : iframeDoc.URL;
 
         links.forEach(link => {
+            if (link.classList.contains('catch-btn')) {
+                return;
+            }
+
             const handleLinkClick = function(e) {
                 const hrefAttr = this.getAttribute('href');
                 if (!hrefAttr) return;
 
-                if (hrefAttr.startsWith('http://') || hrefAttr.startsWith('https://') || hrefAttr.startsWith('mailto:')) {
+                if (hrefAttr.startsWith('http://') || hrefAttr.startsWith('https://')) {
+                    e.preventDefault();
+                    const encodedUrl = encodeURIComponent(hrefAttr);
+                    const newBrowserUrl = '/catch?viewer=' + encodeURIComponent(archiveName) + '&url=' + encodedUrl;
+                    history.pushState(null, '', newBrowserUrl);
+                    showSpinner();
+                    setIframeLocation('/catch?url=' + encodedUrl);
+                    return;
+                }
+
+                if (hrefAttr.startsWith('mailto:')) {
                     if (!this.target || this.target === '_self') {
                         this.target = '_blank';
                     }
@@ -145,7 +195,11 @@ function fixIframeURLs(iframeDoc) {
                             window.location.href = urlObj.href;
                         }
                     } else {
-                        window.open(urlObj.href, '_blank');
+                        const encodedUrl = encodeURIComponent(urlObj.href);
+                        const newBrowserUrl = '/catch?viewer=' + encodeURIComponent(archiveName) + '&url=' + encodedUrl;
+                        history.pushState(null, '', newBrowserUrl);
+                        showSpinner();
+                        setIframeLocation('/catch?url=' + encodedUrl);
                     }
                 } catch (err) {
                     console.error("Error parsing URL:", err);
@@ -253,14 +307,7 @@ function hideSpinner() {
 }
 
 function loadHome() {
-    const iframe = document.getElementById('contentFrame');
-    showSpinner();
-    iframe.src = '/content/' + archiveName + '/';
-
-    const searchResults = document.getElementById('searchResults');
-    if (searchResults) {
-        searchResults.classList.remove('active');
-    }
+    loadPage('');
 }
 
 function loadPage(path) {
@@ -268,9 +315,13 @@ function loadPage(path) {
         path = path.substring(1);
     }
 
-    const iframe = document.getElementById('contentFrame');
+    const newUrl = '/viewer/' + archiveName + '/' + path;
+    if (window.location.pathname !== newUrl) {
+        history.pushState(null, '', newUrl);
+    }
+
     showSpinner();
-    iframe.src = '/content/' + archiveName + '/' + path;
+    setIframeLocation('/content/' + archiveName + '/' + path);
 
     const searchResults = document.getElementById('searchResults');
     if (searchResults) {

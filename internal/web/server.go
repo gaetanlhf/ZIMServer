@@ -86,6 +86,8 @@ func (s *Server) serveHTTP(w http.ResponseWriter, r *http.Request) {
 		s.contentHandler.ServeHTTP(w, r)
 	case strings.HasPrefix(path, "/api/"):
 		s.apiHandler.ServeHTTP(w, r)
+	case strings.HasPrefix(path, "/catch"):
+		s.viewerHandler.ServeHTTP(w, r)
 	default:
 		http.NotFound(w, r)
 	}

@@ -34,6 +34,12 @@ func Load() (*Templates, error) {
 	}
 	templates["viewer"] = viewerTemplate
 
+	catchContentTemplate, err := template.ParseFS(html.TemplatesFS, "static/templates/base.html", "static/templates/catch.html")
+	if err != nil {
+		return nil, err
+	}
+	templates["catch"] = catchContentTemplate
+
 	return &Templates{templates: templates}, nil
 }
 
