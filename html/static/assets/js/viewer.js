@@ -151,7 +151,7 @@ function fixIframeURLs(iframeDoc) {
         const currentIframeUrl = iframeDoc.defaultView ? iframeDoc.defaultView.location.href : iframeDoc.URL;
 
         links.forEach(link => {
-            if (link.classList.contains('catch-btn')) {
+            if (link.classList.contains('error-btn')) {
                 return;
             }
 

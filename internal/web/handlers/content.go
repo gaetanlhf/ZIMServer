@@ -16,6 +16,7 @@ import (
 type ContentHandler struct {
 	ArchiveService *services.ArchiveService
 	FaviconService *services.FaviconService
+	Templates      TemplateRenderer
 }
 
 var timeZero = time.Time{}
@@ -34,21 +35,21 @@ func (h *ContentHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	parts := strings.SplitN(path, "/", 2)
 
 	if len(parts) == 0 {
-		http.NotFound(w, r)
+		h.handle404(w, r, "", "")
 		return
 	}
 
 	archiveName := parts[0]
 	archive, exists := h.ArchiveService.GetArchive(archiveName)
 	if !exists {
-		http.NotFound(w, r)
+		h.handle404(w, r, "", "")
 		return
 	}
 
 	if len(parts) == 1 || parts[1] == "" {
 		mainPage, err := archive.Reader.GetMainPage()
 		if err != nil {
-			http.Error(w, "No main page found", http.StatusNotFound)
+			h.handle404(w, r, archiveName, "")
 			return
 		}
 
@@ -75,7 +76,7 @@ func (h *ContentHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (h *ContentHandler) handleResource(w http.ResponseWriter, r *http.Request, archive *services.Archive, resourcePath string) {
 	entry, err := archive.FS.GetEntry(resourcePath)
 	if err != nil {
-		http.NotFound(w, r)
+		h.handle404(w, r, archive.Name, resourcePath)
 		return
 	}
 
@@ -98,7 +99,7 @@ func (h *ContentHandler) handleResource(w http.ResponseWriter, r *http.Request, 
 
 	file, err := archive.FS.Open(resourcePath)
 	if err != nil {
-		http.NotFound(w, r)
+		h.handle404(w, r, archive.Name, resourcePath)
 		return
 	}
 	defer file.Close()
@@ -155,4 +156,32 @@ func (h *ContentHandler) handleFavicon(w http.ResponseWriter, r *http.Request, a
 	}
 
 	http.NotFound(w, r)
+}
+
+func (h *ContentHandler) handle404(w http.ResponseWriter, r *http.Request, archiveName string, resourcePath string) {
+	w.WriteHeader(http.StatusNotFound)
+
+	data := struct {
+		Url      string
+		HomeURL  string
+	}{
+		Url: r.URL.Path,
+	}
+
+	if archiveName != "" {
+		archive, exists := h.ArchiveService.GetArchive(archiveName)
+		if exists {
+			mainPage, err := archive.Reader.GetMainPage()
+			if err == nil {
+				resolvedPage, err := archive.Reader.ResolveRedirect(mainPage)
+				if err == nil {
+					data.HomeURL = fmt.Sprintf("/content/%s/%s", archiveName, resolvedPage.GetPath())
+				}
+			}
+		}
+	}
+
+	if err := h.Templates.Render(w, "404", data); err != nil {
+		log.Printf("Template error: %v", err)
+	}
 }

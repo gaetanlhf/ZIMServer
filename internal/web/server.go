@@ -48,6 +48,7 @@ func NewServer(version string) (*Server, error) {
 		contentHandler: &handlers.ContentHandler{
 			ArchiveService: archiveService,
 			FaviconService: faviconService,
+			Templates:      tmpl,
 		},
 		apiHandler: &handlers.APIHandler{
 			ArchiveService: archiveService,
@@ -89,6 +90,6 @@ func (s *Server) serveHTTP(w http.ResponseWriter, r *http.Request) {
 	case strings.HasPrefix(path, "/catch"):
 		s.viewerHandler.ServeHTTP(w, r)
 	default:
-		http.NotFound(w, r)
+		s.contentHandler.ServeHTTP(w, r)
 	}
 }

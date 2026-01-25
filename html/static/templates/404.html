@@ -1,0 +1,42 @@
+{{define "title"}}Page Not Found{{end}}
+
+{{define "body"}}
+<div class="container error-container">
+    <div class="error-card">
+        <div class="error-icon-wrapper">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="error-icon">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+        </div>
+        <h2 class="error-title">Page not found</h2>
+        <p class="error-text">The page you are looking for does not exist.</p>
+        <div class="error-url">
+            {{.Url}}
+        </div>
+
+        {{if .HomeURL}}
+        <p class="error-text-secondary">The content might be located elsewhere in the archive, please try using the search function</p>
+        {{end}}
+
+        <div class="error-actions">
+            <button onclick="history.back()" class="btn error-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                Go Back
+            </button>
+            {{if .HomeURL}}
+            <a href="{{.HomeURL}}" class="btn primary error-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                Archive Home
+            </a>
+            {{else}}
+            <a href="/" class="btn primary error-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                Server Home
+            </a>
+            {{end}}
+        </div>
+    </div>
+</div>
+{{end}}

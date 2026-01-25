@@ -40,6 +40,12 @@ func Load() (*Templates, error) {
 	}
 	templates["catch"] = catchContentTemplate
 
+	notFoundTemplate, err := template.ParseFS(html.TemplatesFS, "static/templates/base.html", "static/templates/404.html")
+	if err != nil {
+		return nil, err
+	}
+	templates["404"] = notFoundTemplate
+
 	return &Templates{templates: templates}, nil
 }
 

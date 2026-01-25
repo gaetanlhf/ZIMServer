@@ -56,14 +56,14 @@ func (h *ViewerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	archiveName := parts[0]
 	archive, exists := h.ArchiveService.GetArchive(archiveName)
 	if !exists {
-		http.NotFound(w, r)
+		h.handle404(w, r, "", "")
 		return
 	}
 
 	if len(parts) == 1 || parts[1] == "" {
 		mainPage, err := archive.Reader.GetMainPage()
 		if err != nil {
-			http.Error(w, "No main page found", http.StatusNotFound)
+			h.handle404(w, r, archiveName, "")
 			return
 		}
 
@@ -123,7 +123,7 @@ func (h *ViewerHandler) handleCatch(w http.ResponseWriter, r *http.Request) {
 
 	archive, exists := h.ArchiveService.GetArchive(viewer)
 	if !exists {
-		http.NotFound(w, r)
+		h.handle404(w, r, "", "")
 		return
 	}
 
@@ -145,6 +145,34 @@ func (h *ViewerHandler) handleCatch(w http.ResponseWriter, r *http.Request) {
 
 	if err := h.Templates.Render(w, "viewer", data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Printf("Template error: %v", err)
+	}
+}
+
+func (h *ViewerHandler) handle404(w http.ResponseWriter, r *http.Request, archiveName string, resourcePath string) {
+	w.WriteHeader(http.StatusNotFound)
+
+	data := struct {
+		Url      string
+		HomeURL  string
+	}{
+		Url: r.URL.Path,
+	}
+
+	if archiveName != "" {
+		archive, exists := h.ArchiveService.GetArchive(archiveName)
+		if exists {
+			mainPage, err := archive.Reader.GetMainPage()
+			if err == nil {
+				resolvedPage, err := archive.Reader.ResolveRedirect(mainPage)
+				if err == nil {
+					data.HomeURL = fmt.Sprintf("/viewer/%s/%s", archiveName, resolvedPage.GetPath())
+				}
+			}
+		}
+	}
+
+	if err := h.Templates.Render(w, "404", data); err != nil {
 		log.Printf("Template error: %v", err)
 	}
 }
