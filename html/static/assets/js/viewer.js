@@ -10,6 +10,26 @@ function init(archive) {
     const iframe = document.getElementById('contentFrame');
     const spinner = document.getElementById('spinner');
 
+    const pathPrefix = '/viewer/' + archiveName + '/';
+    if (window.location.pathname.startsWith(pathPrefix)) {
+        if (window.location.search || window.location.hash) {
+            const currentSrc = iframe.getAttribute('src');
+            if (currentSrc) {
+                let newSrc = currentSrc;
+                if (window.location.search && !newSrc.includes('?')) {
+                    newSrc += window.location.search;
+                }
+                if (window.location.hash && !newSrc.includes('#')) {
+                    newSrc += window.location.hash;
+                }
+                
+                if (newSrc !== currentSrc) {
+                    iframe.src = newSrc;
+                }
+            }
+        }
+    }
+
     setTimeout(function() {
         try {
             const iframeContent = iframe.contentDocument || iframe.contentWindow.document;
@@ -25,7 +45,9 @@ function init(archive) {
         hideSpinner();
 
         try {
-            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            const iframeWin = iframe.contentWindow;
+            const iframeDoc = iframeWin.document;
+
             const archiveTitle = document.querySelector('.archive-name').textContent;
             document.title = iframeDoc.title + ' - ' + archiveTitle;
 
@@ -35,6 +57,24 @@ function init(archive) {
                     searchResults.classList.remove('active');
                 }
             });
+
+            const originalPushState = iframeWin.history.pushState;
+            const originalReplaceState = iframeWin.history.replaceState;
+
+            iframeWin.history.pushState = function() {
+                const result = originalPushState.apply(this, arguments);
+                updateBrowserURL();
+                return result;
+            };
+
+            iframeWin.history.replaceState = function() {
+                const result = originalReplaceState.apply(this, arguments);
+                updateBrowserURL();
+                return result;
+            };
+
+            iframeWin.addEventListener('hashchange', updateBrowserURL);
+            iframeWin.addEventListener('popstate', updateBrowserURL);
 
             fixIframeURLs(iframeDoc);
 
@@ -77,11 +117,13 @@ function init(archive) {
 
     window.addEventListener('popstate', function(event) {
         const path = window.location.pathname;
+        const search = window.location.search;
+        const hash = window.location.hash;
         
         if (path.startsWith('/viewer/' + archiveName + '/')) {
             const entryPath = path.substring(('/viewer/' + archiveName + '/').length);
             showSpinner();
-            setIframeLocation('/content/' + archiveName + '/' + entryPath);
+            setIframeLocation('/content/' + archiveName + '/' + entryPath + search + hash);
         } else if (path.startsWith('/catch')) {
             const urlParams = new URLSearchParams(window.location.search);
             const externalUrl = urlParams.get('url');
@@ -91,6 +133,8 @@ function init(archive) {
             }
         }
     });
+
+    setInterval(updateBrowserURL, 500);
 }
 
 function setIframeLocation(url) {
@@ -107,29 +151,31 @@ function updateBrowserURL() {
     try {
         const iframe = document.getElementById('contentFrame');
         if (iframe.contentWindow.location.origin === window.location.origin) {
-            const iframePath = iframe.contentWindow.location.pathname;
+            const iframeLoc = iframe.contentWindow.location;
+            const iframePath = iframeLoc.pathname;
 
             const prefix = '/content/' + archiveName + '/';
             if (iframePath.startsWith(prefix)) {
                 const path = iframePath.substring(prefix.length);
-                const newUrl = '/viewer/' + archiveName + '/' + path;
+                const newUrl = '/viewer/' + archiveName + '/' + path + iframeLoc.search + iframeLoc.hash;
+                const currentUrl = window.location.pathname + window.location.search + window.location.hash;
 
-                if (window.location.pathname !== newUrl) {
+                if (currentUrl !== newUrl) {
                     history.replaceState(null, '', newUrl);
                 }
             } else if (iframePath.startsWith('/catch')) {
-                const urlParams = new URLSearchParams(iframe.contentWindow.location.search);
+                const urlParams = new URLSearchParams(iframeLoc.search);
                 const externalUrl = urlParams.get('url');
                 if (externalUrl) {
                     const newUrl = '/catch?viewer=' + encodeURIComponent(archiveName) + '&url=' + encodeURIComponent(externalUrl);
-                    if (window.location.pathname + window.location.search !== newUrl) {
+                    const currentUrl = window.location.pathname + window.location.search + window.location.hash;
+                    if (currentUrl !== newUrl) {
                         history.replaceState(null, '', newUrl);
                     }
                 }
             }
         }
     } catch(e) {
-        console.log('Cannot update browser URL:', e);
     }
 }
 
@@ -316,7 +362,9 @@ function loadPage(path) {
     }
 
     const newUrl = '/viewer/' + archiveName + '/' + path;
-    if (window.location.pathname !== newUrl) {
+    const currentUrl = window.location.pathname + window.location.search + window.location.hash;
+
+    if (currentUrl !== newUrl) {
         history.pushState(null, '', newUrl);
     }
 
