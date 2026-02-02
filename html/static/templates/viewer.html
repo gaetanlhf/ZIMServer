@@ -9,22 +9,25 @@
 {{define "body"}}
 <div class="viewer-page">
     <header>
-        <div class="scroll-fade scroll-fade-left"></div>
-        <div class="scroll-fade scroll-fade-right"></div>
         <div class="viewer-header">
             <a href="/" class="icon-btn" title="Back to home">
                 <svg viewBox="0 0 24 24" fill="currentColor">
                     <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
                 </svg>
             </a>
-            <a href="#" onclick="loadHome(); return false;" class="archive-info" title="Go to archive home">
-                <img src="/content/{{.ArchiveName}}/favicon.ico" alt="{{.ArchiveTitle}}"
-                     onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27%23666%27%3E%3Cpath d=%27M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z%27/%3E%3C/svg%3E'">
+            <a href="#" onclick="loadHome(); return false;" class="archive-info" id="archiveInfo" title="Go to archive home">
+                <div class="archive-icon-container">
+                    <img id="archiveIcon" src="/content/{{.ArchiveName}}/favicon.ico" alt="{{.ArchiveTitle}}"
+                         onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27%23666%27%3E%3Cpath d=%27M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z%27/%3E%3C/svg%3E'">
+                    <div class="spinner">
+                        <div class="spinner-circle"></div>
+                    </div>
+                </div>
                 <span class="archive-name">{{.ArchiveTitle}}</span>
             </a>
             <div class="spacer"></div>
             {{if .HasIndex}}
-            <button class="icon-btn random-btn" onclick="loadRandom()" title="Random article">
+            <button class="icon-btn random-btn" id="randomBtn" onclick="loadRandom()" title="Random article">
                 <svg viewBox="0 0 24 24" fill="currentColor">
                     <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM7.5 18c-.83 0-1.5-.67-1.5-1.5S6.67 15 7.5 15s1.5.67 1.5 1.5S8.33 18 7.5 18zm0-9C6.67 9 6 8.33 6 7.5S6.67 6 7.5 6 9 6.67 9 7.5 8.33 9 7.5 9zm4.5 4.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4.5 4.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm0-9c-.83 0-1.5-.67-1.5-1.5S15.67 6 16.5 6s1.5.67 1.5 1.5S17.33 9 16.5 9z"/>
                 </svg>
@@ -50,9 +53,6 @@
     <div class="search-results" id="searchResults"></div>
 
     <div class="iframe-container">
-        <div class="spinner" id="spinner">
-            <div class="spinner-circle"></div>
-        </div>
         {{if .IsCatch}}
         <iframe id="contentFrame" src="{{.CatchSrc}}"></iframe>
         {{else}}

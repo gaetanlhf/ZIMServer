@@ -8,7 +8,6 @@ function init(archive) {
     document.documentElement.classList.add('viewer-mode');
 
     const iframe = document.getElementById('contentFrame');
-    const spinner = document.getElementById('spinner');
 
     const pathPrefix = '/viewer/' + archiveName + '/';
     if (window.location.pathname.startsWith(pathPrefix)) {
@@ -30,16 +29,15 @@ function init(archive) {
         }
     }
 
-    setTimeout(function() {
-        try {
-            const iframeContent = iframe.contentDocument || iframe.contentWindow.document;
-            if (iframeContent.readyState !== "complete") {
-                showSpinner();
-            }
-        } catch (e) {
+    // Check immediately if iframe is loaded
+    try {
+        const iframeContent = iframe.contentDocument || iframe.contentWindow.document;
+        if (iframeContent.readyState !== "complete") {
             showSpinner();
         }
-    }, 300);
+    } catch (e) {
+        showSpinner();
+    }
 
     iframe.addEventListener('load', function() {
         hideSpinner();
@@ -97,12 +95,7 @@ function init(archive) {
         }
     });
 
-    setTimeout(updateScrollIndicators, 100);
-
-    const header = document.querySelector('.viewer-header');
-    header.addEventListener('scroll', updateScrollIndicators);
     window.addEventListener('resize', () => {
-        setTimeout(updateScrollIndicators, 100);
         positionSearchResults();
     });
 
@@ -261,33 +254,6 @@ function fixIframeURLs(iframeDoc) {
     }
 }
 
-function updateScrollIndicators() {
-    const header = document.querySelector('.viewer-header');
-    const fadeLeft = document.querySelector('.scroll-fade-left');
-    const fadeRight = document.querySelector('.scroll-fade-right');
-
-    if (!header || !fadeLeft || !fadeRight) return;
-
-    const hasOverflow = header.scrollWidth > header.clientWidth;
-    const scrollLeft = header.scrollLeft;
-    const maxScroll = header.scrollWidth - header.clientWidth;
-
-    const canScrollLeft = scrollLeft > 1;
-    const canScrollRight = scrollLeft < maxScroll - 1;
-
-    if (canScrollLeft) {
-        fadeLeft.classList.add('visible');
-    } else {
-        fadeLeft.classList.remove('visible');
-    }
-
-    if (canScrollRight && hasOverflow) {
-        fadeRight.classList.add('visible');
-    } else {
-        fadeRight.classList.remove('visible');
-    }
-}
-
 function updateClearButton() {
     const searchInput = document.getElementById('searchInput');
     const clearBtn = document.getElementById('clearSearchBtn');
@@ -331,25 +297,17 @@ function clearSearch() {
 }
 
 function showSpinner() {
-    const spinner = document.getElementById('spinner');
-    const iframeContainer = document.querySelector('.iframe-container');
-
-    iframeContainer.style.transition = 'opacity 0.4s';
-    iframeContainer.style.opacity = '0.5';
-    iframeContainer.style.pointerEvents = 'none';
-
-    spinner.classList.add('active');
+    const archiveInfo = document.getElementById('archiveInfo');
+    if (archiveInfo) {
+        archiveInfo.classList.add('loading');
+    }
 }
 
 function hideSpinner() {
-    const spinner = document.getElementById('spinner');
-    const iframeContainer = document.querySelector('.iframe-container');
-
-    iframeContainer.style.transition = 'opacity 0.4s';
-    iframeContainer.style.opacity = '1';
-    iframeContainer.style.pointerEvents = 'all';
-
-    spinner.classList.remove('active');
+    const archiveInfo = document.getElementById('archiveInfo');
+    if (archiveInfo) {
+        archiveInfo.classList.remove('loading');
+    }
 }
 
 function loadHome() {
