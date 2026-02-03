@@ -32,8 +32,18 @@ type APIRandomResponse struct {
 	Path  string `json:"path"`
 }
 
+type APIStatusResponse struct {
+	Archives []string `json:"archives"`
+}
+
 func (h *APIHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	path := strings.TrimPrefix(r.URL.Path, "/api/")
+
+	if path == "status" {
+		h.handleStatus(w, r)
+		return
+	}
+
 	parts := strings.SplitN(path, "/", 2)
 
 	if len(parts) < 2 {
@@ -58,6 +68,21 @@ func (h *APIHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	default:
 		http.NotFound(w, r)
 	}
+}
+
+func (h *APIHandler) handleStatus(w http.ResponseWriter, r *http.Request) {
+	archives := h.ArchiveService.ListArchives()
+	names := make([]string, len(archives))
+	for i, archive := range archives {
+		names[i] = archive.Name
+	}
+
+	response := APIStatusResponse{
+		Archives: names,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }
 
 func (h *APIHandler) handleSearch(w http.ResponseWriter, r *http.Request, archive *services.Archive) {

@@ -128,6 +128,7 @@ function init(archive) {
     });
 
     setInterval(updateBrowserURL, 500);
+    setInterval(checkArchiveStatus, 5000);
 }
 
 function setIframeLocation(url) {
@@ -406,4 +407,17 @@ function searchArticles(query) {
                 lastSearchResults = '';
             });
     }, 300);
+}
+
+function checkArchiveStatus() {
+    if (!archiveName) return;
+    
+    fetch('/api/status')
+        .then(res => res.json())
+        .then(data => {
+            if (!data.archives.includes(archiveName)) {
+                window.location.href = '/';
+            }
+        })
+        .catch(console.error);
 }

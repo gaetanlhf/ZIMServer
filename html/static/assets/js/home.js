@@ -70,6 +70,33 @@ function updateScrollIndicators() {
     }
 }
 
+let currentArchives = '';
+
+function getDisplayedArchives() {
+    const cards = document.querySelectorAll('.archive-card');
+    const names = [];
+    cards.forEach(card => {
+        const href = card.getAttribute('href');
+        const match = href.match(/\/viewer\/([^\/]+)\//);
+        if (match) {
+            names.push(match[1]);
+        }
+    });
+    return names.sort().join(',');
+}
+
+function checkUpdates() {
+    fetch('/api/status')
+        .then(res => res.json())
+        .then(data => {
+            const newArchives = data.archives.sort().join(',');
+            if (currentArchives !== newArchives) {
+                location.reload();
+            }
+        })
+        .catch(console.error);
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('infoModal').addEventListener('click', function(e) {
         if (e.target === this) {
@@ -90,4 +117,7 @@ document.addEventListener('DOMContentLoaded', function() {
     window.addEventListener('resize', () => {
         setTimeout(updateScrollIndicators, 100);
     });
+
+    currentArchives = getDisplayedArchives();
+    setInterval(checkUpdates, 5000);
 });
