@@ -162,8 +162,13 @@ func (s *ArchiveService) UnloadZIM(name string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if _, exists := s.archives[name]; !exists {
+	archive, exists := s.archives[name]
+	if !exists {
 		return fmt.Errorf("archive not found: %s", name)
+	}
+
+	if err := archive.Reader.Close(); err != nil {
+		log.Printf("Failed to close reader for %s: %v", name, err)
 	}
 
 	delete(s.archives, name)

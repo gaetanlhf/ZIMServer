@@ -297,13 +297,18 @@ func watchFiles(server *web.Server, paths []string) {
 	fileStates := make(map[string]*fileState)
 	loadedFiles := make(map[string]bool)
 
+	for _, archive := range server.ListArchives() {
+		loadedFiles[archive.Path] = true
+	}
+
 	initialFiles := collectZimFiles(paths)
 	for _, f := range initialFiles {
 		if info, err := os.Stat(f); err == nil {
+			isLoaded := loadedFiles[f]
 			fileStates[f] = &fileState{
 				size:    info.Size(),
 				modTime: info.ModTime(),
-				stable:  true,
+				stable:  isLoaded,
 			}
 		}
 	}

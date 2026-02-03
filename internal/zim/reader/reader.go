@@ -36,6 +36,13 @@ func NewReaderFromReaderAt(r io.ReaderAt) (*ZIMReader, error) {
 	return zr, nil
 }
 
+func (zr *ZIMReader) Close() error {
+	if c, ok := zr.file.(io.Closer); ok {
+		return c.Close()
+	}
+	return nil
+}
+
 func (zr *ZIMReader) GetHeader() *Header {
 	return zr.header
 }
