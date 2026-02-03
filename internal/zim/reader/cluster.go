@@ -56,6 +56,67 @@ func (c *Cluster) ReadBlob(blobIndex uint32) ([]byte, error) {
 	return data[startOffset:endOffset], nil
 }
 
+func (c *Cluster) BlobReader(blobIndex uint32) (io.ReaderAt, int64, error) {
+	clusterInfo := make([]byte, 1)
+	if _, err := c.reader.ReadAt(clusterInfo, int64(c.offset)); err != nil {
+		return nil, 0, fmt.Errorf("failed to read cluster info: %w", err)
+	}
+
+	compression := CompressionType(clusterInfo[0] & 0x0F)
+	c.Compression = compression
+	c.Extended = (clusterInfo[0] & 0x10) != 0
+
+	if compression != CompressionNone {
+		data, err := c.ReadBlob(blobIndex)
+		if err != nil {
+			return nil, 0, err
+		}
+		return bytes.NewReader(data), int64(len(data)), nil
+	}
+
+	offsetSize := 4
+	if c.Extended {
+		offsetSize = 8
+	}
+
+	firstOffsetBuf := make([]byte, offsetSize)
+	if _, err := c.reader.ReadAt(firstOffsetBuf, int64(c.offset+1)); err != nil {
+		return nil, 0, fmt.Errorf("failed to read first offset: %w", err)
+	}
+
+	var firstOffset uint64
+	if c.Extended {
+		firstOffset = binary.LittleEndian.Uint64(firstOffsetBuf)
+	} else {
+		firstOffset = uint64(binary.LittleEndian.Uint32(firstOffsetBuf))
+	}
+
+	blobCount := (firstOffset / uint64(offsetSize)) - 1
+	if blobIndex >= uint32(blobCount) {
+		return nil, 0, fmt.Errorf("blob index %d out of range (max %d)", blobIndex, blobCount)
+	}
+
+	offsetsPos := int64(c.offset) + 1 + int64(blobIndex)*int64(offsetSize)
+	offsetsBuf := make([]byte, offsetSize*2)
+	if _, err := c.reader.ReadAt(offsetsBuf, offsetsPos); err != nil {
+		return nil, 0, fmt.Errorf("failed to read blob offsets: %w", err)
+	}
+
+	var startOffset, endOffset uint64
+	if c.Extended {
+		startOffset = binary.LittleEndian.Uint64(offsetsBuf[:8])
+		endOffset = binary.LittleEndian.Uint64(offsetsBuf[8:])
+	} else {
+		startOffset = uint64(binary.LittleEndian.Uint32(offsetsBuf[:4]))
+		endOffset = uint64(binary.LittleEndian.Uint32(offsetsBuf[4:]))
+	}
+
+	blobStart := int64(c.offset) + 1 + int64(startOffset)
+	blobSize := int64(endOffset - startOffset)
+
+	return io.NewSectionReader(c.reader, blobStart, blobSize), blobSize, nil
+}
+
 func (c *Cluster) readUncompressedData() ([]byte, error) {
 	clusterInfo := make([]byte, 1)
 	if _, err := c.reader.ReadAt(clusterInfo, int64(c.offset)); err != nil {

@@ -3,6 +3,7 @@ package index
 import (
 	"encoding/binary"
 	"fmt"
+	"io"
 	"sort"
 	"strings"
 
@@ -15,39 +16,39 @@ func NewIndex(reader *zimreader.ZIMReader, indexType IndexType) (*Index, error) 
 		return nil, fmt.Errorf("index not found: %w", err)
 	}
 
-	content, err := reader.GetContent(entry)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read index content: %w", err)
-	}
-
-	if len(content)%4 != 0 {
-		return nil, fmt.Errorf("invalid index size: %d bytes", len(content))
-	}
-
-	entryCount := len(content) / 4
-	entries := make([]uint32, entryCount)
-
-	for i := 0; i < entryCount; i++ {
-		offset := i * 4
-		entries[i] = binary.LittleEndian.Uint32(content[offset : offset+4])
-	}
-
 	return &Index{
-		reader:  reader,
-		entries: entries,
+		reader:     reader,
+		entry:      entry,
+		entryCount: 0,
 	}, nil
 }
 
 func (idx *Index) Size() int {
-	return len(idx.entries)
+	if idx.entryCount > 0 {
+		return idx.entryCount
+	}
+
+	_, size, err := idx.reader.GetContentReader(idx.entry)
+	if err != nil {
+		return 0
+	}
+	idx.entryCount = int(size) / 4
+	return idx.entryCount
 }
 
 func (idx *Index) GetEntry(position int) (zimreader.DirectoryEntry, error) {
-	if position < 0 || position >= len(idx.entries) {
-		return nil, fmt.Errorf("position out of bounds: %d", position)
+	readerAt, _, err := idx.reader.GetContentReader(idx.entry)
+	if err != nil {
+		return nil, err
 	}
 
-	entryIndex := idx.entries[position]
+	offset := int64(position * 4)
+	buf := make([]byte, 4)
+	if _, err := readerAt.ReadAt(buf, offset); err != nil {
+		return nil, fmt.Errorf("failed to read index entry at %d: %w", position, err)
+	}
+
+	entryIndex := binary.LittleEndian.Uint32(buf)
 	return idx.reader.GetEntryByIndex(entryIndex)
 }
 
@@ -61,6 +62,13 @@ func (idx *Index) SearchByTitle(titlePrefix string, maxResults int) ([]SearchRes
 		return nil, fmt.Errorf("empty title prefix")
 	}
 
+	readerAt, size, err := idx.reader.GetContentReader(idx.entry)
+	if err != nil {
+		return nil, err
+	}
+
+	idx.entryCount = int(size) / 4
+
 	capacity := maxResults
 	if capacity <= 0 {
 		capacity = 100
@@ -68,51 +76,87 @@ func (idx *Index) SearchByTitle(titlePrefix string, maxResults int) ([]SearchRes
 	results := make([]SearchResult, 0, capacity)
 	seen := make(map[string]bool)
 
-	start := idx.binarySearchTitle(titlePrefix)
+	start := idx.binarySearchTitle(readerAt, idx.entryCount, titlePrefix)
 
-	for i := start; i < len(idx.entries); i++ {
+	chunkSize := 1024
+	buf := make([]byte, chunkSize*4)
+
+	for i := start; i < idx.entryCount; {
 		if maxResults > 0 && len(results) >= maxResults {
 			break
 		}
 
-		entry, err := idx.reader.GetEntryByIndex(idx.entries[i])
-		if err != nil {
-			continue
+		remaining := idx.entryCount - i
+		toRead := chunkSize
+		if remaining < toRead {
+			toRead = remaining
 		}
 
-		title := strings.ToLower(entry.GetTitle())
-		if !strings.HasPrefix(title, titlePrefix) {
+		readBytes := toRead * 4
+		if _, err := readerAt.ReadAt(buf[:readBytes], int64(i*4)); err != nil {
 			break
 		}
 
-		resolvedEntry, err := idx.reader.ResolveRedirect(entry)
-		if err != nil {
-			continue
-		}
+		for j := 0; j < toRead; j++ {
+			if maxResults > 0 && len(results) >= maxResults {
+				break
+			}
 
-		key := string(resolvedEntry.GetNamespace()) + resolvedEntry.GetPath()
-		if !seen[key] {
-			seen[key] = true
+			entryIndex := binary.LittleEndian.Uint32(buf[j*4 : (j+1)*4])
+			entry, err := idx.reader.GetEntryByIndex(entryIndex)
+			if err != nil {
+				continue
+			}
 
-			results = append(results, SearchResult{
-				Index: uint32(i),
-				Entry: resolvedEntry,
-				Score: 1.0,
-			})
+			title := strings.ToLower(entry.GetTitle())
+			if !strings.HasPrefix(title, titlePrefix) {
+				if title > titlePrefix && !strings.HasPrefix(title, titlePrefix) {
+					return results, nil
+				}
+				if !strings.HasPrefix(title, titlePrefix) {
+					goto Done
+				}
+			}
+
+			resolvedEntry, err := idx.reader.ResolveRedirect(entry)
+			if err != nil {
+				continue
+			}
+
+			key := string(resolvedEntry.GetNamespace()) + resolvedEntry.GetPath()
+			if !seen[key] {
+				seen[key] = true
+
+				results = append(results, SearchResult{
+					Index: uint32(i + j),
+					Entry: resolvedEntry,
+					Score: 1.0,
+				})
+			}
 		}
+		i += toRead
 	}
 
+Done:
 	sortResultsByScore(results)
 
 	return results, nil
 }
 
-func (idx *Index) binarySearchTitle(prefix string) int {
-	left, right := 0, len(idx.entries)
+func (idx *Index) binarySearchTitle(r io.ReaderAt, count int, prefix string) int {
+	left, right := 0, count
+	buf := make([]byte, 4)
 
 	for left < right {
 		mid := (left + right) / 2
-		entry, err := idx.reader.GetEntryByIndex(idx.entries[mid])
+
+		if _, err := r.ReadAt(buf, int64(mid*4)); err != nil {
+			left = mid + 1
+			continue
+		}
+
+		entryIndex := binary.LittleEndian.Uint32(buf)
+		entry, err := idx.reader.GetEntryByIndex(entryIndex)
 		if err != nil {
 			left = mid + 1
 			continue

@@ -12,8 +12,9 @@ const (
 )
 
 type Index struct {
-	reader  *zimreader.ZIMReader
-	entries []uint32
+	reader     *zimreader.ZIMReader
+	entry      zimreader.DirectoryEntry
+	entryCount int
 }
 
 type SearchResult struct {

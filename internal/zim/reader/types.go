@@ -88,10 +88,7 @@ type Cluster struct {
 }
 
 type ZIMReader struct {
-	file          io.ReaderAt
-	header        *Header
-	mimeTypes     []string
-	pathPointers  []uint64
-	titlePointers []uint32
-	clusterPtrs   []uint64
+	file      io.ReaderAt
+	header    *Header
+	mimeTypes []string
 }

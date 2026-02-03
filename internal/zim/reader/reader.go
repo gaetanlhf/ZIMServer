@@ -1,6 +1,7 @@
 package reader
 
 import (
+	"encoding/binary"
 	"fmt"
 	"io"
 	"os"
@@ -32,26 +33,6 @@ func NewReaderFromReaderAt(r io.ReaderAt) (*ZIMReader, error) {
 	}
 	zr.mimeTypes = mimeTypes
 
-	pathPointers, err := readPathPointers(r, header.PathPtrPos, header.EntryCount)
-	if err != nil {
-		return nil, err
-	}
-	zr.pathPointers = pathPointers
-
-	if header.TitlePtrPos != 0xffffffffffffffff {
-		titlePointers, err := readTitlePointers(r, header.TitlePtrPos, header.EntryCount)
-		if err != nil {
-			return nil, err
-		}
-		zr.titlePointers = titlePointers
-	}
-
-	clusterPtrs, err := readClusterPointers(r, header.ClusterPtrPos, header.ClusterCount)
-	if err != nil {
-		return nil, err
-	}
-	zr.clusterPtrs = clusterPtrs
-
 	return zr, nil
 }
 
@@ -64,8 +45,13 @@ func (zr *ZIMReader) GetMimeTypes() []string {
 }
 
 func (zr *ZIMReader) GetEntryByPath(path string) (DirectoryEntry, error) {
-	idx := sort.Search(len(zr.pathPointers), func(i int) bool {
-		entry, err := readDirectoryEntry(zr.file, zr.pathPointers[i])
+	count := int(zr.header.EntryCount)
+	idx := sort.Search(count, func(i int) bool {
+		ptr, err := zr.readPathPointer(i)
+		if err != nil {
+			return false
+		}
+		entry, err := readDirectoryEntry(zr.file, ptr)
 		if err != nil {
 			return false
 		}
@@ -73,11 +59,16 @@ func (zr *ZIMReader) GetEntryByPath(path string) (DirectoryEntry, error) {
 		return fullPath >= path
 	})
 
-	if idx >= len(zr.pathPointers) {
+	if idx >= count {
 		return nil, fmt.Errorf("entry not found: %s", path)
 	}
 
-	entry, err := readDirectoryEntry(zr.file, zr.pathPointers[idx])
+	ptr, err := zr.readPathPointer(idx)
+	if err != nil {
+		return nil, err
+	}
+
+	entry, err := readDirectoryEntry(zr.file, ptr)
 	if err != nil {
 		return nil, err
 	}
@@ -91,11 +82,16 @@ func (zr *ZIMReader) GetEntryByPath(path string) (DirectoryEntry, error) {
 }
 
 func (zr *ZIMReader) GetEntryByIndex(index uint32) (DirectoryEntry, error) {
-	if index >= uint32(len(zr.pathPointers)) {
+	if index >= zr.header.EntryCount {
 		return nil, fmt.Errorf("index out of range: %d", index)
 	}
 
-	return readDirectoryEntry(zr.file, zr.pathPointers[index])
+	ptr, err := zr.readPathPointer(int(index))
+	if err != nil {
+		return nil, err
+	}
+
+	return readDirectoryEntry(zr.file, ptr)
 }
 
 func (zr *ZIMReader) GetEntryByURL(namespace byte, path string) (DirectoryEntry, error) {
@@ -152,6 +148,21 @@ func (zr *ZIMReader) GetContent(entry DirectoryEntry) ([]byte, error) {
 	return cluster.ReadBlob(contentEntry.BlobNumber)
 }
 
+func (zr *ZIMReader) GetContentReader(entry DirectoryEntry) (io.ReaderAt, int64, error) {
+	resolvedEntry, err := zr.ResolveRedirect(entry)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	contentEntry := resolvedEntry.(*ContentEntry)
+	cluster, err := zr.getCluster(contentEntry.ClusterNumber)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return cluster.BlobReader(contentEntry.BlobNumber)
+}
+
 func (zr *ZIMReader) GetMimeType(entry DirectoryEntry) (string, error) {
 	resolvedEntry, err := zr.ResolveRedirect(entry)
 	if err != nil {
@@ -167,14 +178,22 @@ func (zr *ZIMReader) GetMimeType(entry DirectoryEntry) (string, error) {
 }
 
 func (zr *ZIMReader) getCluster(index uint32) (*Cluster, error) {
-	if index >= uint32(len(zr.clusterPtrs)) {
+	if index >= zr.header.ClusterCount {
 		return nil, fmt.Errorf("cluster index out of range: %d", index)
 	}
 
-	offset := zr.clusterPtrs[index]
+	offset, err := zr.readClusterPointer(int(index))
+	if err != nil {
+		return nil, err
+	}
+
 	var size uint64
-	if index+1 < uint32(len(zr.clusterPtrs)) {
-		size = zr.clusterPtrs[index+1] - offset
+	if index+1 < zr.header.ClusterCount {
+		nextOffset, err := zr.readClusterPointer(int(index + 1))
+		if err != nil {
+			return nil, err
+		}
+		size = nextOffset - offset
 	} else {
 		size = zr.header.ChecksumPos - offset
 	}
@@ -189,8 +208,13 @@ func (zr *ZIMReader) getCluster(index uint32) (*Cluster, error) {
 func (zr *ZIMReader) ListEntriesByNamespace(namespace byte) ([]DirectoryEntry, error) {
 	var entries []DirectoryEntry
 	prefix := string(namespace)
+	
+	for i := 0; i < int(zr.header.EntryCount); i++ {
+		ptr, err := zr.readPathPointer(i)
+		if err != nil {
+			continue
+		}
 
-	for _, ptr := range zr.pathPointers {
 		entry, err := readDirectoryEntry(zr.file, ptr)
 		if err != nil {
 			continue
@@ -217,4 +241,22 @@ func (zr *ZIMReader) GetMetadata(key string) (string, error) {
 	}
 
 	return string(content), nil
+}
+
+func (zr *ZIMReader) readPathPointer(index int) (uint64, error) {
+	offset := int64(zr.header.PathPtrPos) + int64(index*8)
+	buf := make([]byte, 8)
+	if _, err := zr.file.ReadAt(buf, offset); err != nil {
+		return 0, fmt.Errorf("failed to read path pointer at index %d: %w", index, err)
+	}
+	return binary.LittleEndian.Uint64(buf), nil
+}
+
+func (zr *ZIMReader) readClusterPointer(index int) (uint64, error) {
+	offset := int64(zr.header.ClusterPtrPos) + int64(index*8)
+	buf := make([]byte, 8)
+	if _, err := zr.file.ReadAt(buf, offset); err != nil {
+		return 0, fmt.Errorf("failed to read cluster pointer at index %d: %w", index, err)
+	}
+	return binary.LittleEndian.Uint64(buf), nil
 }
