@@ -347,13 +347,20 @@ select {
     border-radius: var(--border-radius-lg);
     overflow: hidden;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    transition: transform var(--transition), box-shadow var(--transition);
+    transition: transform var(--transition), box-shadow var(--transition), opacity 0.3s ease;
     text-decoration: none;
     color: inherit;
     display: flex;
     flex-direction: column;
     border: 1px solid var(--color-border-light);
     min-height: 200px;
+    opacity: 1;
+}
+
+.archive-card.fade-out {
+    opacity: 0;
+    transform: scale(0.95);
+    pointer-events: none;
 }
 
 .archive-card:hover {

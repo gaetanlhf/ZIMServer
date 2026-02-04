@@ -35,9 +35,16 @@ function filterArchives() {
 
         if (matchesLanguage && matchesCategory && matchesSearch) {
             card.style.display = 'flex';
+            void card.offsetWidth;
+            card.classList.remove('fade-out');
             visibleCount++;
         } else {
-            card.style.display = 'none';
+            card.classList.add('fade-out');
+            setTimeout(() => {
+                if (card.classList.contains('fade-out')) {
+                    card.style.display = 'none';
+                }
+            }, 300);
         }
     });
 
