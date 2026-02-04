@@ -338,7 +338,7 @@ select {
 
 .archives {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
     gap: var(--spacing-xl);
 }
 
@@ -353,7 +353,7 @@ select {
     display: flex;
     flex-direction: column;
     border: 1px solid var(--color-border-light);
-    min-height: 200px;
+    min-height: 220px;
     opacity: 1;
 }
 
@@ -429,6 +429,10 @@ select {
     color: var(--color-text-muted);
     font-size: 0.85rem;
     margin-bottom: 0.5rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 .archive-description {
@@ -457,6 +461,14 @@ select {
     justify-content: center;
     flex: 1;
     gap: var(--spacing-xs);
+    min-width: 0;
+}
+
+.footer-item span:not(.footer-icon) {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
 }
 
 .footer-item:first-child {
@@ -660,7 +672,7 @@ select {
     }
 
     .archives {
-        grid-template-columns: repeat(auto-fill, minmax(460px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
         gap: var(--spacing-2xl);
     }
 
@@ -681,7 +693,7 @@ select {
     }
 
     .archives {
-        grid-template-columns: repeat(auto-fill, minmax(560px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(600px, 1fr));
         gap: 3rem;
     }
 
