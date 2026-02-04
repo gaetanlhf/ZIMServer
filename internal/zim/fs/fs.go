@@ -107,26 +107,6 @@ func (zfs *ZIMFS) searchEntryFromURL(url string) (zimreader.DirectoryEntry, erro
 		}
 	}
 
-	entries, err := zfs.reader.ListEntriesByNamespace(zimreader.NamespaceContent)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, e := range entries {
-		if e.GetPath() == url {
-			return e, nil
-		}
-	}
-
-	wellKnownEntries, err := zfs.reader.ListEntriesByNamespace(zimreader.NamespaceWellKnown)
-	if err == nil {
-		for _, e := range wellKnownEntries {
-			if e.GetPath() == url {
-				return e, nil
-			}
-		}
-	}
-
 	return nil, os.ErrNotExist
 }
 
