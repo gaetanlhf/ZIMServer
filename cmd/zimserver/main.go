@@ -56,7 +56,7 @@ func main() {
 
 func runServeCommand(args []string) {
 	serveCmd := flag.NewFlagSet("serve", flag.ContinueOnError)
-	serveCmd.Usage = func() {} // Disable default usage
+	serveCmd.Usage = func() {}
 
 	host := serveCmd.String("host", "localhost", "HTTP server host")
 	serveCmd.String("H", "localhost", "HTTP server host (short)")

@@ -173,7 +173,6 @@ func (s *ArchiveService) UnloadZIM(name string) error {
 
 	delete(s.archives, name)
 
-	// Correction: Ajout de l'extension .zim
 	zimFileName := name + ".zim"
 	log.Printf("%sℹ%s Unloaded ZIM: %s%s%s", colorCyan, colorReset, colorCyan, zimFileName, colorReset)
 	return nil

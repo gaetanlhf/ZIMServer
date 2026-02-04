@@ -29,7 +29,6 @@ function init(archive) {
         }
     }
 
-    // Check immediately if iframe is loaded
     try {
         const iframeContent = iframe.contentDocument || iframe.contentWindow.document;
         if (iframeContent.readyState !== "complete") {

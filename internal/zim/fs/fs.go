@@ -14,7 +14,6 @@ func New(reader *zimreader.ZIMReader) *ZIMFS {
 	return &ZIMFS{reader: reader}
 }
 
-// GetEntry récupère une entrée ZIM sans la résoudre (pour détecter les redirections)
 func (zfs *ZIMFS) GetEntry(name string) (zimreader.DirectoryEntry, error) {
 	return zfs.searchEntryFromURL(name)
 }
