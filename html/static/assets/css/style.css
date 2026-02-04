@@ -454,7 +454,21 @@ select {
 .footer-item {
     display: flex;
     align-items: center;
+    justify-content: center;
+    flex: 1;
     gap: var(--spacing-xs);
+}
+
+.footer-item:first-child {
+    justify-content: flex-start;
+}
+
+.footer-item:last-child {
+    justify-content: flex-end;
+}
+
+.footer-item:only-child {
+    justify-content: flex-start;
 }
 
 .footer-icon {
