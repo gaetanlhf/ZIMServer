@@ -238,17 +238,8 @@ func (s *ArchiveService) GetCategories() []string {
 
 	categoryMap := make(map[string]bool)
 	for _, archive := range s.archives {
-		if archive.Metadata.Tags != "" {
-			tags := strings.Split(archive.Metadata.Tags, ";")
-			for _, tag := range tags {
-				tag = strings.TrimSpace(tag)
-				if tag != "" && !strings.HasPrefix(tag, "_") {
-					tag = strings.TrimPrefix(tag, "_category:")
-					if !strings.HasPrefix(tag, "_") {
-						categoryMap[utils.CapitalizeFirst(tag)] = true
-					}
-				}
-			}
+		if archive.Metadata.Category != "" {
+			categoryMap[archive.Metadata.Category] = true
 		}
 	}
 

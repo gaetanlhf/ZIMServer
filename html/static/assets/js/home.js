@@ -45,7 +45,7 @@ function filterArchives() {
         const cardDesc = card.dataset.description.toLowerCase();
 
         const matchesLanguage = !language || cardLang === language || cardLang === 'mul';
-        const matchesCategory = !category || cardCategory.includes(category) || cardTags.includes(category);
+        const matchesCategory = !category || cardCategory === category;
         const matchesSearch = !search || cardTitle.includes(search) || cardDesc.includes(search);
 
         if (matchesLanguage && matchesCategory && matchesSearch) {
