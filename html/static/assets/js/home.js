@@ -1,7 +1,3 @@
-function toggleModal() {
-    document.getElementById('infoModal').classList.toggle('active');
-}
-
 function clearSearch() {
     document.getElementById('searchBox').value = '';
     filterArchives();
@@ -174,12 +170,6 @@ function loadFilters() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('infoModal').addEventListener('click', function(e) {
-        if (e.target === this) {
-            toggleModal();
-        }
-    });
-
     loadFilters();
     filterArchives();
 
