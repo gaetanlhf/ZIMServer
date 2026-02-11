@@ -7,12 +7,27 @@ function clearSearch() {
     filterArchives();
 }
 
+function resetFilters() {
+    document.getElementById('languageFilter').value = '';
+    document.getElementById('categoryFilter').value = '';
+    document.getElementById('searchBox').value = '';
+    filterArchives();
+}
+
+let noResultsTimeout;
+
 function filterArchives() {
     const language = document.getElementById('languageFilter').value.toLowerCase();
     const category = document.getElementById('categoryFilter').value.toLowerCase();
     const search = document.getElementById('searchBox').value.toLowerCase();
     const cards = document.querySelectorAll('.archive-card');
     const clearBtn = document.getElementById('clearSearch');
+    const noResults = document.getElementById('noResults');
+
+    // Save filters to localStorage
+    localStorage.setItem('zimserver_filter_language', document.getElementById('languageFilter').value);
+    localStorage.setItem('zimserver_filter_category', document.getElementById('categoryFilter').value);
+    localStorage.setItem('zimserver_filter_search', document.getElementById('searchBox').value);
 
     if (search) {
         clearBtn.classList.add('visible');
@@ -48,8 +63,22 @@ function filterArchives() {
         }
     });
 
+    if (noResultsTimeout) {
+        clearTimeout(noResultsTimeout);
+    }
+
+    if (visibleCount === 0) {
+        noResultsTimeout = setTimeout(() => {
+            if (noResults) noResults.style.display = '';
+        }, 300);
+    } else {
+        if (noResults) noResults.style.display = 'none';
+    }
+
     const plural = visibleCount === 1 ? 'archive' : 'archives';
     document.getElementById('archiveCount').textContent = visibleCount + ' ' + plural;
+    
+    setTimeout(updateAllScrollIndicators, 100);
 }
 
 function updateScrollIndicators() {
@@ -75,6 +104,30 @@ function updateScrollIndicators() {
     } else {
         fadeRight.classList.remove('visible');
     }
+}
+
+function updateFooterScroll(footer) {
+    const hasOverflow = footer.scrollWidth > footer.clientWidth;
+    const scrollLeft = footer.scrollLeft;
+    const maxScroll = footer.scrollWidth - footer.clientWidth;
+
+    const canScrollLeft = scrollLeft > 1;
+    const canScrollRight = scrollLeft < maxScroll - 1;
+
+    footer.classList.remove('no-scroll-left', 'no-scroll-right', 'no-scroll');
+
+    if (!hasOverflow) {
+        footer.classList.add('no-scroll');
+    } else if (!canScrollLeft) {
+        footer.classList.add('no-scroll-left');
+    } else if (!canScrollRight) {
+        footer.classList.add('no-scroll-right');
+    }
+}
+
+function updateAllScrollIndicators() {
+    updateScrollIndicators();
+    document.querySelectorAll('.archive-footer').forEach(updateFooterScroll);
 }
 
 let currentArchives = '';
@@ -104,6 +157,22 @@ function checkUpdates() {
         .catch(console.error);
 }
 
+function loadFilters() {
+    const savedLanguage = localStorage.getItem('zimserver_filter_language');
+    const savedCategory = localStorage.getItem('zimserver_filter_category');
+    const savedSearch = localStorage.getItem('zimserver_filter_search');
+
+    if (savedLanguage) {
+        document.getElementById('languageFilter').value = savedLanguage;
+    }
+    if (savedCategory) {
+        document.getElementById('categoryFilter').value = savedCategory;
+    }
+    if (savedSearch) {
+        document.getElementById('searchBox').value = savedSearch;
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('infoModal').addEventListener('click', function(e) {
         if (e.target === this) {
@@ -111,18 +180,22 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    const searchBox = document.getElementById('searchBox');
-    if (searchBox.value) {
-        filterArchives();
-    }
+    loadFilters();
+    filterArchives();
 
     const filters = document.querySelector('.filters');
 
-    setTimeout(updateScrollIndicators, 100);
+    setTimeout(updateAllScrollIndicators, 100);
 
     filters.addEventListener('scroll', updateScrollIndicators);
+    
+    document.querySelectorAll('.archive-footer').forEach(footer => {
+        footer.addEventListener('scroll', () => updateFooterScroll(footer));
+        updateFooterScroll(footer);
+    });
+
     window.addEventListener('resize', () => {
-        setTimeout(updateScrollIndicators, 100);
+        setTimeout(updateAllScrollIndicators, 100);
     });
 
     currentArchives = getDisplayedArchives();

@@ -5,21 +5,25 @@
     <div class="scroll-fade scroll-fade-left"></div>
     <div class="scroll-fade scroll-fade-right"></div>
     <div class="filters">
-        <select id="languageFilter" onchange="filterArchives()">
-            <option value="">All languages</option>
-            {{range .Languages}}
-            <option value="{{.Code}}">{{.Name}}</option>
-            {{end}}
-        </select>
-        <select id="categoryFilter" onchange="filterArchives()">
-            <option value="">All categories</option>
-            {{range .Categories}}
-            <option value="{{.}}">{{.}}</option>
-            {{end}}
-        </select>
+        <div class="select-wrapper">
+            <select id="languageFilter" onchange="filterArchives()">
+                <option value="">All languages</option>
+                {{range .Languages}}
+                <option value="{{.Code}}">{{.Name}}</option>
+                {{end}}
+            </select>
+        </div>
+        <div class="select-wrapper">
+            <select id="categoryFilter" onchange="filterArchives()">
+                <option value="">All categories</option>
+                {{range .Categories}}
+                <option value="{{.}}">{{.}}</option>
+                {{end}}
+            </select>
+        </div>
         <div class="search-container">
-            <svg class="search-icon" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
             </svg>
             <input type="text" id="searchBox" placeholder="Search..." oninput="filterArchives()">
             <button class="clear-search" id="clearSearch" onclick="clearSearch()">
@@ -55,43 +59,49 @@
                          onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27%23666%27%3E%3Cpath d=%27M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z%27/%3E%3C/svg%3E'">
                 </div>
                 <div class="archive-main">
-                    <div class="archive-title-row">
-                        <div class="archive-title">{{.Metadata.Title}}</div>
-                        <div class="language-badge">{{.Metadata.LanguageCode}}</div>
-                    </div>
+                    <div class="archive-title" title="{{.Metadata.Title}}">{{.Metadata.Title}}</div>
                     {{if .Metadata.Creator}}
-                    <div class="archive-creator">{{.Metadata.Creator}}</div>
+                    <div class="archive-creator" title="{{.Metadata.Creator}}">{{.Metadata.Creator}}</div>
                     {{end}}
                     {{if .Metadata.Description}}
-                    <div class="archive-description">{{.Metadata.Description}}</div>
+                    <div class="archive-description" title="{{.Metadata.Description}}">{{.Metadata.Description}}</div>
                     {{end}}
                 </div>
             </div>
             <div class="archive-footer">
-                <div class="footer-item">
+                <div class="footer-item" title="{{.Metadata.LanguageCode}}">
                     <span class="footer-icon">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
-                        </svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+  <path d="M4.545 6.714 4.11 8H3l1.862-5h1.284L8 8H6.833l-.435-1.286zm1.634-.736L5.5 3.956h-.049l-.679 2.022z"/>
+  <path d="M0 2a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v3h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-3H2a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zm7.138 9.995q.289.451.63.846c-.748.575-1.673 1.001-2.768 1.292.178.217.451.635.555.867 1.125-.359 2.08-.844 2.886-1.494.777.665 1.739 1.165 2.93 1.472.133-.254.414-.673.629-.89-1.125-.253-2.057-.694-2.82-1.284.681-.747 1.222-1.651 1.621-2.757H14V8h-3v1.047h.765c-.318.844-.74 1.546-1.272 2.13a6 6 0 0 1-.415-.492 2 2 0 0 1-.94.31"/>
+</svg>
+                    </span>
+                    <span>{{.Metadata.LanguageCode}}</span>
+                </div>
+                <div class="footer-item" title="{{.Metadata.EntryCount}} articles">
+                    <span class="footer-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+  <path d="M4 0h5.293A1 1 0 0 1 10 .293L13.707 4a1 1 0 0 1 .293.707V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2m5.5 1.5v2a1 1 0 0 0 1 1h2z"/>
+</svg>
                     </span>
                     <span>{{.Metadata.EntryCount}} articles</span>
                 </div>
                 {{if .Metadata.Date}}
-                <div class="footer-item">
+                <div class="footer-item" title="{{.Metadata.Date}}">
                     <span class="footer-icon">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
-                        </svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+  <path d="M4 .5a.5.5 0 0 0-1 0V1H2a2 2 0 0 0-2 2v1h16V3a2 2 0 0 0-2-2h-1V.5a.5.5 0 0 0-1 0V1H4zM16 14V5H0v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2m-3.5-7h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5"/>
+</svg>
                     </span>
                     <span>{{.Metadata.Date}}</span>
                 </div>
                 {{end}}
                 {{if .Metadata.Category}}
-                <div class="footer-item">
+                <div class="footer-item" title="{{.Metadata.Category}}">
                     <span class="footer-icon">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/>
-                        </svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+  <path d="M2 1a1 1 0 0 0-1 1v4.586a1 1 0 0 0 .293.707l7 7a1 1 0 0 0 1.414 0l4.586-4.586a1 1 0 0 0 0-1.414l-7-7A1 1 0 0 0 6.586 1zm4 3.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0"/>
+</svg>
                     </span>
                     <span>{{.Metadata.Category}}</span>
                 </div>
@@ -100,10 +110,35 @@
         </a>
         {{end}}
     </div>
+    <div id="noResults" class="empty-state-wrapper" style="display: none;">
+        <div class="error-card empty-state-card">
+            <div class="error-icon-wrapper">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
+                </svg>
+            </div>
+            <h2 class="error-title">No results found</h2>
+            <p class="error-text">Do you want to reset the filters?</p>
+            <button onclick="resetFilters()" class="btn primary" style="margin: 0 auto;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z"/>
+                    <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466"/>
+                </svg>
+                Reset Filters
+            </button>
+        </div>
+    </div>
     {{else}}
-    <div class="empty-state">
-        <h2>No archives available</h2>
-        <p>Are the ZIM files present and/or accessible?</p>
+    <div class="empty-state-wrapper">
+        <div class="error-card empty-state-card">
+            <div class="error-icon-wrapper">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M4 0h5.293A1 1 0 0 1 10 .293L13.707 4a1 1 0 0 1 .293.707V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2m5.5 1.5v2a1 1 0 0 0 1 1h2z"/>
+                </svg>
+            </div>
+            <h2 class="error-title">No archives available</h2>
+            <p class="error-text">Are the ZIM files present and/or accessible?</p>
+        </div>
     </div>
     {{end}}
 </div>

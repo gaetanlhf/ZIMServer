@@ -61,12 +61,20 @@
         color: #af7ac5;
         border-color: #af7ac5;
     }
+
+    .error-card {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    }
 }
 
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+}
+
+img, svg {
+    vertical-align: -0.125em;
 }
 
 body {
@@ -120,6 +128,7 @@ header {
     text-decoration: none;
     color: var(--color-text-light);
     position: relative;
+    line-height: 1.2;
 }
 
 .btn {
@@ -149,6 +158,7 @@ header {
 .btn svg {
     width: 20px;
     height: 20px;
+    display: block;
 }
 
 .btn svg {
@@ -171,9 +181,39 @@ input[type="text"] {
     color: var(--color-text);
 }
 
+.select-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.select-wrapper::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: var(--spacing-md);
+    transform: translateY(-50%);
+    width: 16px;
+    height: 12px;
+    background-color: var(--color-text-lighter);
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    pointer-events: none;
+}
+
 select {
     min-width: 180px;
     flex-shrink: 0;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding-right: 2.5rem;
+    background-image: none;
 }
 
 .search-container,
@@ -353,7 +393,8 @@ select {
     display: flex;
     flex-direction: column;
     border: 1px solid var(--color-border-light);
-    min-height: 220px;
+    min-height: 0;
+    height: 100%;
     opacity: 1;
 }
 
@@ -391,6 +432,7 @@ select {
     width: 100%;
     height: 100%;
     object-fit: contain;
+    transition: opacity 0.2s;
 }
 
 .archive-main {
@@ -412,6 +454,10 @@ select {
     color: var(--color-heading);
     line-height: 1.3;
     flex: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 .language-badge {
@@ -443,53 +489,64 @@ select {
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    margin-bottom: 0.5rem;
 }
 
 .archive-footer {
     margin-top: auto;
     display: flex;
+    align-items: center;
     gap: var(--spacing-lg);
     padding: var(--spacing-lg) var(--spacing-xl);
     border-top: 1px solid var(--color-border-subtle);
     font-size: 0.85rem;
     color: var(--color-text-muted);
+    overflow-x: auto;
+    white-space: nowrap;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+    transition: mask-image 0.3s ease, -webkit-mask-image 0.3s ease;
+}
+
+.archive-footer.no-scroll-left {
+    mask-image: linear-gradient(to right, black 90%, transparent);
+    -webkit-mask-image: linear-gradient(to right, black 90%, transparent);
+}
+
+.archive-footer.no-scroll-right {
+    mask-image: linear-gradient(to right, transparent, black 10%);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 10%);
+}
+
+.archive-footer.no-scroll {
+    mask-image: none;
+    -webkit-mask-image: none;
+}
+
+.archive-footer::-webkit-scrollbar {
+    display: none;
 }
 
 .footer-item {
     display: flex;
     align-items: center;
-    justify-content: center;
-    flex: 1;
     gap: var(--spacing-xs);
-    min-width: 0;
+    flex-shrink: 0;
 }
 
 .footer-item span:not(.footer-icon) {
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    min-width: 0;
-}
-
-.footer-item:first-child {
-    justify-content: flex-start;
-}
-
-.footer-item:last-child {
-    justify-content: flex-end;
-}
-
-.footer-item:only-child {
-    justify-content: flex-start;
+    line-height: 1.2;
 }
 
 .footer-icon {
-    width: 16px;
-    height: 16px;
-    min-width: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    width: 1.1em;
+    height: 1.1em;
+    min-width: 1.1em;
+    display: inline-block;
+    flex-shrink: 0;
 }
 
 .footer-icon svg {
@@ -504,11 +561,45 @@ select {
     padding: 4rem var(--spacing-2xl);
     background: var(--color-bg-white);
     border-radius: var(--border-radius-lg);
+    animation: fadeIn 0.5s ease-out;
 }
 
 .empty-state h2 {
     color: var(--color-text-muted);
     margin-bottom: var(--spacing-lg);
+}
+
+.empty-state-wrapper {
+    padding: 4rem 0;
+    text-align: center;
+    animation: fadeIn 0.5s ease-out;
+}
+
+.empty-state-card {
+    margin: 0 auto;
+    max-width: 400px;
+    padding: 2rem;
+}
+
+.empty-state-card .error-icon,
+.empty-state-card svg {
+    color: var(--color-text-muted);
+    width: 48px;
+    height: 48px;
+}
+
+.empty-state-card .btn {
+    display: inline-flex;
+}
+
+.empty-state-card .btn svg {
+    width: 16px;
+    height: 16px;
+    color: inherit;
+}
+
+.empty-state-card .error-text:last-child {
+    margin-bottom: 0 !important;
 }
 
 .modal {
@@ -660,6 +751,11 @@ select {
     100% { transform: rotate(360deg); }
 }
 
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 @media (min-width: 1600px) {
     .container {
         max-width: 90%;
@@ -766,6 +862,12 @@ select {
     margin-bottom: var(--spacing-lg);
 }
 
+.error-icon-wrapper svg {
+    width: 48px;
+    height: 48px;
+    color: #e74c3c;
+}
+
 .error-icon {
     width: 48px;
     height: 48px;
@@ -802,6 +904,12 @@ select {
     width: auto;
     padding: var(--spacing-md) var(--spacing-xl);
     font-weight: 600;
+}
+
+.error-btn svg {
+    width: 16px;
+    height: 16px;
+    color: inherit;
 }
 
 .error-actions {
