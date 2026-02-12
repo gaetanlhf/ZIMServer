@@ -13,7 +13,8 @@
     --color-bg-hover: #f5f5f5;
     --color-heading: #2c3e50;
     --color-bg-overlay: rgba(255, 255, 255, 0.8);
-    --color-spinner-track: #f3f3f3;
+    --color-spinner-track: rgba(0, 0, 0, 0.1);
+    --color-spinner: var(--color-primary);
 
     --spacing-xs: 0.4rem;
     --spacing-sm: 0.6rem;
@@ -42,7 +43,8 @@
         --color-bg-hover: #2c2c2c;
         --color-heading: #ecf0f1;
         --color-bg-overlay: rgba(30, 30, 30, 0.8);
-        --color-spinner-track: #333;
+        --color-spinner-track: rgba(255, 255, 255, 0.1);
+        --color-spinner: var(--color-primary-dark);
     }
 
     .archive-card {
@@ -317,7 +319,7 @@ select {
     width: 18px;
     height: 18px;
     border: 2px solid var(--color-spinner-track);
-    border-top: 2px solid var(--color-primary);
+    border-top: 2px solid var(--color-spinner);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
 }
@@ -700,7 +702,7 @@ select {
     width: 24px;
     height: 24px;
     border: 3px solid var(--color-spinner-track);
-    border-top: 3px solid var(--color-primary);
+    border-top: 3px solid var(--color-spinner);
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
