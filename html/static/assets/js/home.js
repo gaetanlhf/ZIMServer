@@ -20,7 +20,6 @@ function filterArchives() {
     const clearBtn = document.getElementById('clearSearch');
     const noResults = document.getElementById('noResults');
 
-    // Save filters to localStorage
     localStorage.setItem('zimserver_filter_language', document.getElementById('languageFilter').value);
     localStorage.setItem('zimserver_filter_category', document.getElementById('categoryFilter').value);
     localStorage.setItem('zimserver_filter_search', document.getElementById('searchBox').value);
@@ -169,9 +168,71 @@ function loadFilters() {
     }
 }
 
+function setupSelectArrows() {
+    const selects = document.querySelectorAll('select');
+    
+    document.addEventListener('click', (e) => {
+        selects.forEach(select => {
+            const wrapper = select.parentElement;
+            if (wrapper.classList.contains('select-wrapper')) {
+                if (!wrapper.contains(e.target)) {
+                    wrapper.classList.remove('active');
+                }
+            }
+        });
+    });
+
+    selects.forEach(select => {
+        const wrapper = select.parentElement;
+        if (wrapper.classList.contains('select-wrapper')) {
+            let justFocused = false;
+            let justChanged = false;
+
+            select.addEventListener('focus', () => {
+                if (justChanged) return;
+                wrapper.classList.add('active');
+                justFocused = true;
+                setTimeout(() => justFocused = false, 200);
+            });
+
+            select.addEventListener('blur', () => {
+                wrapper.classList.remove('active');
+            });
+
+            select.addEventListener('click', () => {
+                if (justChanged) {
+                    justChanged = false;
+                    return;
+                }
+                if (justFocused) {
+                    wrapper.classList.add('active');
+                    justFocused = false;
+                } else {
+                    wrapper.classList.toggle('active');
+                }
+            });
+            
+            select.addEventListener('change', () => {
+                wrapper.classList.remove('active');
+                select.blur();
+                justChanged = true;
+                setTimeout(() => justChanged = false, 200);
+            });
+
+            select.addEventListener('input', () => {
+                wrapper.classList.remove('active');
+                select.blur();
+                justChanged = true;
+                setTimeout(() => justChanged = false, 200);
+            });
+        }
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     loadFilters();
     filterArchives();
+    setupSelectArrows();
 
     const filters = document.querySelector('.filters');
 

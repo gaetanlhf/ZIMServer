@@ -207,6 +207,12 @@ input[type="text"] {
     -webkit-mask-size: contain;
     mask-size: contain;
     pointer-events: none;
+    transition: transform var(--transition);
+    transform-origin: center;
+}
+
+.select-wrapper.active::after {
+    transform: translateY(-50%) rotate(180deg);
 }
 
 select {
