@@ -205,11 +205,7 @@
 
 {{define "scripts"}}
 <script>
-    window.i18n = {
-        archive_singular: "{{T .Lang "home.archive_singular"}}",
-        archive_plural: "{{T .Lang "home.archive_plural"}}",
-        zero_is_singular: {{T .Lang "home.zero_is_singular"}}
-    };
+    window.i18n = {{.Translations | json}};
 </script>
 <script src="/assets/js/home.js"></script>
 {{end}}

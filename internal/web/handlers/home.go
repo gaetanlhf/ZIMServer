@@ -23,6 +23,7 @@ type HomeData struct {
 	Version        string
 	Lang           string
 	AvailableLangs []i18n.LanguageInfo
+	Translations   interface{}
 }
 
 type TemplateRenderer interface {
@@ -41,6 +42,7 @@ func (h *HomeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		Version:        h.Version,
 		Lang:           lang,
 		AvailableLangs: h.I18n.GetAvailableLanguages(),
+		Translations:   h.I18n.Translate(lang, "home"),
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")

@@ -38,33 +38,41 @@ func NewServer(version string) (*Server, error) {
 	faviconService := services.NewFaviconService()
 	searchService := services.NewSearchService()
 
+	homeHandler := &handlers.HomeHandler{
+		ArchiveService: archiveService,
+		Templates:      tmpl,
+		Version:        version,
+		I18n:           i18n,
+	}
+
+	viewerHandler := &handlers.ViewerHandler{
+		ArchiveService: archiveService,
+		FaviconService: faviconService,
+		Templates:      tmpl,
+		I18n:           i18n,
+	}
+
+	contentHandler := &handlers.ContentHandler{
+		ArchiveService: archiveService,
+		FaviconService: faviconService,
+		Templates:      tmpl,
+		I18n:           i18n,
+	}
+
+	apiHandler := &handlers.APIHandler{
+		ArchiveService: archiveService,
+		SearchService:  searchService,
+	}
+
 	return &Server{
 		archiveService: archiveService,
 		faviconService: faviconService,
 		searchService:  searchService,
-		homeHandler: &handlers.HomeHandler{
-			ArchiveService: archiveService,
-			Templates:      tmpl,
-			Version:        version,
-			I18n:           i18n,
-		},
-		viewerHandler: &handlers.ViewerHandler{
-			ArchiveService: archiveService,
-			FaviconService: faviconService,
-			Templates:      tmpl,
-			I18n:           i18n,
-		},
-		contentHandler: &handlers.ContentHandler{
-			ArchiveService: archiveService,
-			FaviconService: faviconService,
-			Templates:      tmpl,
-			I18n:           i18n,
-		},
-		apiHandler: &handlers.APIHandler{
-			ArchiveService: archiveService,
-			SearchService:  searchService,
-		},
-		i18n: i18n,
+		homeHandler:    homeHandler,
+		viewerHandler:  viewerHandler,
+		contentHandler: contentHandler,
+		apiHandler:     apiHandler,
+		i18n:           i18n,
 	}, nil
 }
 
