@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gaetanlhf/ZIMServer/internal/web/handlers"
+	"github.com/gaetanlhf/ZIMServer/internal/web/i18n"
 	"github.com/gaetanlhf/ZIMServer/internal/web/services"
 	"github.com/gaetanlhf/ZIMServer/internal/web/templates"
 	"github.com/gaetanlhf/ZIMServer/internal/web/utils"
@@ -19,10 +20,16 @@ type Server struct {
 	viewerHandler  *handlers.ViewerHandler
 	contentHandler *handlers.ContentHandler
 	apiHandler     *handlers.APIHandler
+	i18n           *i18n.I18n
 }
 
 func NewServer(version string) (*Server, error) {
-	tmpl, err := templates.Load()
+	i18n, err := i18n.New()
+	if err != nil {
+		return nil, fmt.Errorf("failed to load i18n: %w", err)
+	}
+
+	tmpl, err := templates.Load(i18n)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load templates: %w", err)
 	}
@@ -39,21 +46,25 @@ func NewServer(version string) (*Server, error) {
 			ArchiveService: archiveService,
 			Templates:      tmpl,
 			Version:        version,
+			I18n:           i18n,
 		},
 		viewerHandler: &handlers.ViewerHandler{
 			ArchiveService: archiveService,
 			FaviconService: faviconService,
 			Templates:      tmpl,
+			I18n:           i18n,
 		},
 		contentHandler: &handlers.ContentHandler{
 			ArchiveService: archiveService,
 			FaviconService: faviconService,
 			Templates:      tmpl,
+			I18n:           i18n,
 		},
 		apiHandler: &handlers.APIHandler{
 			ArchiveService: archiveService,
 			SearchService:  searchService,
 		},
+		i18n: i18n,
 	}, nil
 }
 

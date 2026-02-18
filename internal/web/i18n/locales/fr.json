@@ -1,0 +1,47 @@
+{
+  "home": {
+    "all_languages": "Toutes les langues",
+    "all_categories": "Toutes les catégories",
+    "search": "Rechercher...",
+    "archives": "archives",
+    "archive": "archive",
+    "no_results_found": "Aucun résultat trouvé",
+    "reset_filters_prompt": "Voulez-vous réinitialiser les filtres ?",
+    "reset_filters": "Réinitialiser les filtres",
+    "no_archives_available": "Aucune archive disponible",
+    "no_archives_prompt": "Les fichiers ZIM sont-ils présents et/ou accessibles ?",
+    "learn_more": "En savoir plus sur ZIMServer",
+    "check_for_updates": "Vérifier les mises à jour",
+    "articles": "articles",
+    "settings": "Paramètres de l'interface",
+    "language": "Langue",
+    "automatic": "Automatique",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "close": "Fermer",
+    "archive_singular": "archive",
+    "archive_plural": "archives",
+    "zero_is_singular": true
+  },
+  "viewer": {
+    "back_to_home": "Retour à l'accueil",
+    "go_to_archive_home": "Aller à l'accueil de l'archive",
+    "random_article": "Article aléatoire",
+    "search": "Rechercher...",
+    "no_results_found": "Aucun résultat trouvé"
+  },
+  "catch": {
+    "external_link": "Lien externe",
+    "external_link_prompt": "Vous êtes sur le point de naviguer vers :",
+    "external_link_warning": "Cela nécessite une connexion internet.",
+    "open_external_link": "Ouvrir le lien externe"
+  },
+  "404": {
+    "page_not_found": "Page non trouvée",
+    "page_not_found_prompt": "La page que vous recherchez n'existe pas.",
+    "page_not_found_suggestion": "Le contenu peut se trouver ailleurs dans l'archive, essayez d'utiliser la fonction de recherche",
+    "go_back": "Retour",
+    "archive_home": "Accueil de l'archive",
+    "server_home": "Accueil du serveur"
+  }
+}

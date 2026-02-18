@@ -70,8 +70,24 @@ function filterArchives() {
         if (noResults) noResults.style.display = 'none';
     }
 
-    const plural = visibleCount === 1 ? 'archive' : 'archives';
-    document.getElementById('archiveCount').textContent = visibleCount + ' ' + plural;
+    const archiveSingular = window.i18n && window.i18n.archive_singular ? window.i18n.archive_singular : 'archive';
+    const archivePlural = window.i18n && window.i18n.archive_plural ? window.i18n.archive_plural : 'archives';
+
+    let useSingularForZero = false;
+    if (window.i18n && window.i18n.zero_is_singular) {
+        useSingularForZero = window.i18n.zero_is_singular;
+    }
+
+    let pluralText;
+    if (visibleCount === 0) {
+        pluralText = useSingularForZero ? archiveSingular : archivePlural;
+    } else if (visibleCount === 1) {
+        pluralText = archiveSingular;
+    } else {
+        pluralText = archivePlural;
+    }
+
+    document.getElementById('archiveCount').textContent = visibleCount + ' ' + pluralText;
     
     setTimeout(updateAllScrollIndicators, 100);
 }
@@ -229,10 +245,58 @@ function setupSelectArrows() {
     });
 }
 
+function setupSettingsModal() {
+    const modal = document.getElementById('settingsModal');
+    const btn = document.getElementById('settingsBtn');
+    const closeBtn = document.getElementById('closeSettingsModal');
+    const cancelBtn = document.getElementById('cancelSettings');
+    const saveBtn = document.getElementById('saveSettings');
+    const languageSelect = document.getElementById('languageSelect');
+
+    const savedLang = localStorage.getItem('zimserver_language') || 'auto';
+    languageSelect.value = savedLang;
+
+    function openModal() {
+        modal.classList.add('active');
+        languageSelect.value = localStorage.getItem('zimserver_language') || 'auto';
+    }
+
+    function closeModal() {
+        modal.classList.remove('active');
+    }
+
+    function saveSettings() {
+        const newLang = languageSelect.value;
+        const oldLang = localStorage.getItem('zimserver_language') || 'auto';
+
+        localStorage.setItem('zimserver_language', newLang);
+        
+        document.cookie = `zimserver_language=${newLang}; path=/; max-age=31536000`; // 1 year
+        
+        if (newLang !== oldLang) {
+            location.reload();
+        } else {
+            closeModal();
+        }
+    }
+
+    btn.addEventListener('click', openModal);
+    closeBtn.addEventListener('click', closeModal);
+    cancelBtn.addEventListener('click', closeModal);
+    saveBtn.addEventListener('click', saveSettings);
+
+    window.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeModal();
+        }
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     loadFilters();
     filterArchives();
     setupSelectArrows();
+    setupSettingsModal();
 
     const filters = document.querySelector('.filters');
 

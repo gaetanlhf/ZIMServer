@@ -391,7 +391,8 @@ function searchArticles(query) {
                     resultsDiv.innerHTML = lastSearchResults;
                     resultsDiv.classList.add('active');
                 } else {
-                    lastSearchResults = '<div class="search-result-item no-results">No results found</div>';
+                    const noResultsText = window.i18n && window.i18n.no_results_found ? window.i18n.no_results_found : 'No results found';
+                    lastSearchResults = `<div class="search-result-item no-results">${noResultsText}</div>`;
                     resultsDiv.innerHTML = lastSearchResults;
                     resultsDiv.classList.add('active');
                 }

@@ -7,10 +7,12 @@ import (
 	"time"
 
 	"github.com/gaetanlhf/ZIMServer/html"
+	"github.com/gaetanlhf/ZIMServer/internal/web/i18n"
 )
 
 type Templates struct {
 	templates map[string]*template.Template
+	i18n      *i18n.I18n
 }
 
 type noListingFS struct {
@@ -19,34 +21,44 @@ type noListingFS struct {
 
 var timeZero = time.Time{}
 
-func Load() (*Templates, error) {
+func Load(i18n *i18n.I18n) (*Templates, error) {
 	templates := make(map[string]*template.Template)
 
-	homeTemplate, err := template.ParseFS(html.TemplatesFS, "static/templates/base.html", "static/templates/home.html")
+	funcMap := template.FuncMap{
+		"T": func(lang, key string) interface{} {
+			val := i18n.Translate(lang, key)
+			if str, ok := val.(string); ok {
+				return str
+			}
+			return val
+		},
+	}
+
+	homeTemplate, err := template.New("home.html").Funcs(funcMap).ParseFS(html.TemplatesFS, "static/templates/base.html", "static/templates/home.html")
 	if err != nil {
 		return nil, err
 	}
 	templates["home"] = homeTemplate
 
-	viewerTemplate, err := template.ParseFS(html.TemplatesFS, "static/templates/base.html", "static/templates/viewer.html")
+	viewerTemplate, err := template.New("viewer.html").Funcs(funcMap).ParseFS(html.TemplatesFS, "static/templates/base.html", "static/templates/viewer.html")
 	if err != nil {
 		return nil, err
 	}
 	templates["viewer"] = viewerTemplate
 
-	catchContentTemplate, err := template.ParseFS(html.TemplatesFS, "static/templates/base.html", "static/templates/catch.html")
+	catchContentTemplate, err := template.New("catch.html").Funcs(funcMap).ParseFS(html.TemplatesFS, "static/templates/base.html", "static/templates/catch.html")
 	if err != nil {
 		return nil, err
 	}
 	templates["catch"] = catchContentTemplate
 
-	notFoundTemplate, err := template.ParseFS(html.TemplatesFS, "static/templates/base.html", "static/templates/404.html")
+	notFoundTemplate, err := template.New("404.html").Funcs(funcMap).ParseFS(html.TemplatesFS, "static/templates/base.html", "static/templates/404.html")
 	if err != nil {
 		return nil, err
 	}
 	templates["404"] = notFoundTemplate
 
-	return &Templates{templates: templates}, nil
+	return &Templates{templates: templates, i18n: i18n}, nil
 }
 
 func (t *Templates) Render(w http.ResponseWriter, name string, data interface{}) error {

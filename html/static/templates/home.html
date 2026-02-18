@@ -7,7 +7,7 @@
     <div class="filters">
         <div class="select-wrapper">
             <select id="languageFilter" onchange="filterArchives()">
-                <option value="">All languages</option>
+                <option value="">{{T .Lang "home.all_languages"}}</option>
                 {{range .Languages}}
                 <option value="{{.Code}}">{{.Name}}</option>
                 {{end}}
@@ -15,7 +15,7 @@
         </div>
         <div class="select-wrapper">
             <select id="categoryFilter" onchange="filterArchives()">
-                <option value="">All categories</option>
+                <option value="">{{T .Lang "home.all_categories"}}</option>
                 {{range .Categories}}
                 <option value="{{.}}">{{.}}</option>
                 {{end}}
@@ -25,17 +25,23 @@
             <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
                 <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
             </svg>
-            <input type="text" id="searchBox" placeholder="Search..." oninput="filterArchives()">
+            <input type="text" id="searchBox" placeholder="{{T .Lang "home.search"}}" oninput="filterArchives()">
             <button class="clear-search" id="clearSearch" onclick="clearSearch()">
                 <svg viewBox="0 0 24 24" fill="currentColor">
                     <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
                 </svg>
             </button>
         </div>
+        <div class="spacer"></div>
+        <button class="icon-btn" id="settingsBtn" title="{{T .Lang "home.settings"}}">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311c.446.82.023 1.841-.872 2.105l-.34.1c-1.4.413-1.4 2.397 0 2.81l.34.1a1.464 1.464 0 0 1 .872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 0 1 2.105.872l.1.34c.413 1.4 2.397 1.4 2.81 0l.1-.34a1.464 1.464 0 0 1 2.105-.872l.31.17c1.283.698 2.686-.705 1.987-1.987l-.169-.311a1.464 1.464 0 0 1 .872-2.105l.34-.1c1.4-.413 1.4-2.397 0-2.81l-.34-.1a1.464 1.464 0 0 1-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 0 1-2.105-.872zM8 10.93a2.929 2.929 0 1 1 0-5.86 2.929 2.929 0 0 1 0 5.858z"/>
+        </svg>
+        </button>
     </div>
 </header>
 <div class="container">
-    <div class="count" id="archiveCount">{{.Count}} {{if eq .Count 1}}archive{{else}}archives{{end}}</div>
+    <div class="count" id="archiveCount">{{.Count}} {{if eq .Count 1}}{{T .Lang "home.archive"}}{{else}}{{T .Lang "home.archives"}}{{end}}</div>
 
     {{if .Archives}}
     <div class="archives" id="archivesList">
@@ -72,13 +78,13 @@
                     </span>
                     <span>{{.Metadata.LanguageCode}}</span>
                 </div>
-                <div class="footer-item" title="{{.Metadata.EntryCount}} articles">
+                <div class="footer-item" title="{{.Metadata.EntryCount}} {{T $.Lang "home.articles"}}">
                     <span class="footer-icon">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
   <path d="M4 0h5.293A1 1 0 0 1 10 .293L13.707 4a1 1 0 0 1 .293.707V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2m5.5 1.5v2a1 1 0 0 0 1 1h2z"/>
 </svg>
                     </span>
-                    <span>{{.Metadata.EntryCount}} articles</span>
+                    <span>{{.Metadata.EntryCount}} {{T $.Lang "home.articles"}}</span>
                 </div>
                 {{if .Metadata.Date}}
                 <div class="footer-item" title="{{.Metadata.Date}}">
@@ -111,14 +117,14 @@
                     <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
                 </svg>
             </div>
-            <h2 class="error-title">No results found</h2>
-            <p class="error-text">Do you want to reset the filters?</p>
+            <h2 class="error-title">{{T .Lang "home.no_results_found"}}</h2>
+            <p class="error-text">{{T .Lang "home.reset_filters_prompt"}}</p>
             <button onclick="resetFilters()" class="btn primary" style="margin: 0 auto;">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
                     <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z"/>
                     <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466"/>
                 </svg>
-                Reset Filters
+                {{T .Lang "home.reset_filters"}}
             </button>
         </div>
     </div>
@@ -130,8 +136,8 @@
                     <path d="M4 0h5.293A1 1 0 0 1 10 .293L13.707 4a1 1 0 0 1 .293.707V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2m5.5 1.5v2a1 1 0 0 0 1 1h2z"/>
                 </svg>
             </div>
-            <h2 class="error-title">No archives available</h2>
-            <p class="error-text">Are the ZIM files present and/or accessible?</p>
+            <h2 class="error-title">{{T .Lang "home.no_archives_available"}}</h2>
+            <p class="error-text">{{T .Lang "home.no_archives_prompt"}}</p>
         </div>
     </div>
     {{end}}
@@ -143,11 +149,11 @@
             <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
                 <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8"/>
             </svg>
-            Learn more about ZIMServer
+            {{T .Lang "home.learn_more"}}
         </a>
         <div class="footer-right">
             <span class="footer-version">v{{if .Version}}{{.Version}}{{else}}dev{{end}}</span>
-            <a href="https://github.com/gaetanlhf/ZIMServer/releases/latest" target="_blank" class="footer-link" title="Check for updates">
+            <a href="https://github.com/gaetanlhf/ZIMServer/releases/latest" target="_blank" class="footer-link" title="{{T .Lang "home.check_for_updates"}}">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
                     <path fill-rule="evenodd" d="M14 2.5a.5.5 0 0 0-.5-.5h-6a.5.5 0 0 0 0 1h4.793L2.146 13.146a.5.5 0 0 0 .708.708L13 3.707V8.5a.5.5 0 0 0 1 0z"/>
                 </svg>
@@ -155,8 +161,45 @@
         </div>
     </div>
 </footer>
+
+<div id="settingsModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span>{{T .Lang "home.settings"}}</span>
+            <button class="modal-close" id="closeSettingsModal">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label for="languageSelect" class="form-label">{{T .Lang "home.language"}}</label>
+                <div class="select-wrapper">
+                    <select id="languageSelect" class="form-select">
+                        <option value="auto">{{T .Lang "home.automatic"}}</option>
+                        {{range .AvailableLangs}}
+                        <option value="{{.Code}}">{{.Name}}</option>
+                        {{end}}
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn" id="cancelSettings">{{T .Lang "home.cancel"}}</button>
+            <button class="btn primary" id="saveSettings">{{T .Lang "home.save"}}</button>
+        </div>
+    </div>
+</div>
 {{end}}
 
 {{define "scripts"}}
+<script>
+    window.i18n = {
+        archive_singular: "{{T .Lang "home.archive_singular"}}",
+        archive_plural: "{{T .Lang "home.archive_plural"}}",
+        zero_is_singular: {{T .Lang "home.zero_is_singular"}}
+    };
+</script>
 <script src="/assets/js/home.js"></script>
 {{end}}

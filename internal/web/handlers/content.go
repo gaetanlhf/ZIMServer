@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gaetanlhf/ZIMServer/internal/web/i18n"
 	"github.com/gaetanlhf/ZIMServer/internal/web/services"
 	"github.com/gaetanlhf/ZIMServer/internal/web/utils"
 	zimreader "github.com/gaetanlhf/ZIMServer/internal/zim/reader"
@@ -17,6 +18,7 @@ type ContentHandler struct {
 	ArchiveService *services.ArchiveService
 	FaviconService *services.FaviconService
 	Templates      TemplateRenderer
+	I18n           *i18n.I18n
 }
 
 var timeZero = time.Time{}
@@ -160,12 +162,15 @@ func (h *ContentHandler) handleFavicon(w http.ResponseWriter, r *http.Request, a
 
 func (h *ContentHandler) handle404(w http.ResponseWriter, r *http.Request, archiveName string, resourcePath string) {
 	w.WriteHeader(http.StatusNotFound)
+	lang := h.I18n.GetLanguage(r)
 
 	data := struct {
-		Url      string
-		HomeURL  string
+		Url     string
+		HomeURL string
+		Lang    string
 	}{
-		Url: r.URL.Path,
+		Url:  r.URL.Path,
+		Lang: lang,
 	}
 
 	if archiveName != "" {
@@ -181,6 +186,7 @@ func (h *ContentHandler) handle404(w http.ResponseWriter, r *http.Request, archi
 		}
 	}
 
+	w.Header().Set("Content-Language", lang)
 	if err := h.Templates.Render(w, "404", data); err != nil {
 		log.Printf("Template error: %v", err)
 	}

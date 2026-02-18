@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/gaetanlhf/ZIMServer/internal/web/i18n"
 	"github.com/gaetanlhf/ZIMServer/internal/web/services"
 )
 
@@ -15,6 +16,7 @@ type ViewerHandler struct {
 	ArchiveService *services.ArchiveService
 	FaviconService *services.FaviconService
 	Templates      TemplateRenderer
+	I18n           *i18n.I18n
 }
 
 type ViewerData struct {
@@ -27,6 +29,7 @@ type ViewerData struct {
 	IsCatch      bool
 	CatchURL     string
 	CatchSrc     template.URL
+	Lang         string
 }
 
 func (h *ViewerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -83,6 +86,7 @@ func (h *ViewerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	faviconURL, faviconType := h.FaviconService.GetFaviconInfo(archive, archiveName)
 
 	hasIndex := archive.IndexMgr != nil
+	lang := h.I18n.GetLanguage(r)
 
 	data := ViewerData{
 		ArchiveName:  archiveName,
@@ -92,9 +96,11 @@ func (h *ViewerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		FaviconType:  faviconType,
 		HasIndex:     hasIndex,
 		IsCatch:      false,
+		Lang:         lang,
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Content-Language", lang)
 
 	if err := h.Templates.Render(w, "viewer", data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -105,15 +111,19 @@ func (h *ViewerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (h *ViewerHandler) handleCatch(w http.ResponseWriter, r *http.Request) {
 	viewer := r.URL.Query().Get("viewer")
 	catchURL := r.URL.Query().Get("url")
+	lang := h.I18n.GetLanguage(r)
 
 	if viewer == "" {
 		data := struct {
-			Url string
+			Url  string
+			Lang string
 		}{
-			Url: catchURL,
+			Url:  catchURL,
+			Lang: lang,
 		}
 
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.Header().Set("Content-Language", lang)
 		if err := h.Templates.Render(w, "catch", data); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			log.Printf("Template error: %v", err)
@@ -139,9 +149,11 @@ func (h *ViewerHandler) handleCatch(w http.ResponseWriter, r *http.Request) {
 		IsCatch:      true,
 		CatchURL:     catchURL,
 		CatchSrc:     template.URL("/catch?url=" + url.QueryEscape(catchURL)),
+		Lang:         lang,
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Content-Language", lang)
 
 	if err := h.Templates.Render(w, "viewer", data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -151,12 +163,15 @@ func (h *ViewerHandler) handleCatch(w http.ResponseWriter, r *http.Request) {
 
 func (h *ViewerHandler) handle404(w http.ResponseWriter, r *http.Request, archiveName string, resourcePath string) {
 	w.WriteHeader(http.StatusNotFound)
+	lang := h.I18n.GetLanguage(r)
 
 	data := struct {
-		Url      string
-		HomeURL  string
+		Url     string
+		HomeURL string
+		Lang    string
 	}{
-		Url: r.URL.Path,
+		Url:  r.URL.Path,
+		Lang: lang,
 	}
 
 	if archiveName != "" {
@@ -172,6 +187,7 @@ func (h *ViewerHandler) handle404(w http.ResponseWriter, r *http.Request, archiv
 		}
 	}
 
+	w.Header().Set("Content-Language", lang)
 	if err := h.Templates.Render(w, "404", data); err != nil {
 		log.Printf("Template error: %v", err)
 	}
