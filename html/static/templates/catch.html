@@ -25,3 +25,14 @@
     </div>
 </div>
 {{end}}
+
+{{define "scripts"}}
+<script>
+    const savedTheme = localStorage.getItem('zimserver_theme') || 'auto';
+    if (savedTheme === 'auto') {
+        document.documentElement.removeAttribute('data-theme');
+    } else {
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    }
+</script>
+{{end}}

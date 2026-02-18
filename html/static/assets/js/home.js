@@ -252,13 +252,18 @@ function setupSettingsModal() {
     const cancelBtn = document.getElementById('cancelSettings');
     const saveBtn = document.getElementById('saveSettings');
     const languageSelect = document.getElementById('languageSelect');
+    const themeSelect = document.getElementById('themeSelect');
 
     const savedLang = localStorage.getItem('zimserver_language') || 'auto';
+    const savedTheme = localStorage.getItem('zimserver_theme') || 'auto';
+    
     languageSelect.value = savedLang;
+    themeSelect.value = savedTheme;
 
     function openModal() {
         modal.classList.add('active');
         languageSelect.value = localStorage.getItem('zimserver_language') || 'auto';
+        themeSelect.value = localStorage.getItem('zimserver_theme') || 'auto';
     }
 
     function closeModal() {
@@ -268,10 +273,16 @@ function setupSettingsModal() {
     function saveSettings() {
         const newLang = languageSelect.value;
         const oldLang = localStorage.getItem('zimserver_language') || 'auto';
+        
+        const newTheme = themeSelect.value;
+        const oldTheme = localStorage.getItem('zimserver_theme') || 'auto';
 
         localStorage.setItem('zimserver_language', newLang);
+        localStorage.setItem('zimserver_theme', newTheme);
         
         document.cookie = `zimserver_language=${newLang}; path=/; max-age=31536000`; // 1 year
+        
+        applyTheme(newTheme);
         
         if (newLang !== oldLang) {
             location.reload();
@@ -292,11 +303,22 @@ function setupSettingsModal() {
     });
 }
 
+function applyTheme(theme) {
+    if (theme === 'auto') {
+        document.documentElement.removeAttribute('data-theme');
+    } else {
+        document.documentElement.setAttribute('data-theme', theme);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     loadFilters();
     filterArchives();
     setupSelectArrows();
     setupSettingsModal();
+    
+    const savedTheme = localStorage.getItem('zimserver_theme') || 'auto';
+    applyTheme(savedTheme);
 
     const filters = document.querySelector('.filters');
 

@@ -184,6 +184,16 @@
                     </select>
                 </div>
             </div>
+            <div class="form-group">
+                <label for="themeSelect" class="form-label">{{T .Lang "home.theme"}}</label>
+                <div class="select-wrapper">
+                    <select id="themeSelect" class="form-select">
+                        <option value="auto">{{T .Lang "home.automatic"}}</option>
+                        <option value="light">{{T .Lang "home.theme_light"}}</option>
+                        <option value="dark">{{T .Lang "home.theme_dark"}}</option>
+                    </select>
+                </div>
+            </div>
         </div>
         <div class="modal-footer">
             <button class="btn" id="cancelSettings">{{T .Lang "home.cancel"}}</button>

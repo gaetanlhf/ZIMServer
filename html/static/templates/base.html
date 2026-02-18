@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{block "title" .}}{{end}}</title>
     <link rel="stylesheet" href="/assets/css/style.css">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('zimserver_theme') || 'auto';
+            if (savedTheme !== 'auto') {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            }
+        })();
+    </script>
     {{block "head" .}}{{end}}
 </head>
 <body>
