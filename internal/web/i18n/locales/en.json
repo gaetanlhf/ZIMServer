@@ -19,6 +19,7 @@
     "theme_light": "Light",
     "theme_dark": "Dark",
     "automatic": "Automatic",
+    "force_dark_mode": "Force Dark Mode in Content",
     "save": "Save",
     "cancel": "Cancel",
     "close": "Close",

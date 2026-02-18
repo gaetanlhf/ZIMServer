@@ -253,17 +253,40 @@ function setupSettingsModal() {
     const saveBtn = document.getElementById('saveSettings');
     const languageSelect = document.getElementById('languageSelect');
     const themeSelect = document.getElementById('themeSelect');
+    const forceDarkModeCheckbox = document.getElementById('forceDarkModeCheckbox');
 
     const savedLang = localStorage.getItem('zimserver_language') || 'auto';
     const savedTheme = localStorage.getItem('zimserver_theme') || 'auto';
+    const savedForceDarkMode = localStorage.getItem('zimserver_force_dark_mode') === 'true';
     
     languageSelect.value = savedLang;
     themeSelect.value = savedTheme;
+    forceDarkModeCheckbox.checked = savedForceDarkMode;
+
+    function updateForceDarkModeState() {
+        const theme = themeSelect.value;
+        const isSystemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        
+        if (theme === 'light' || (theme === 'auto' && !isSystemDark)) {
+            forceDarkModeCheckbox.disabled = true;
+            forceDarkModeCheckbox.parentElement.style.opacity = '0.5';
+            forceDarkModeCheckbox.parentElement.style.cursor = 'not-allowed';
+        } else {
+            forceDarkModeCheckbox.disabled = false;
+            forceDarkModeCheckbox.parentElement.style.opacity = '1';
+            forceDarkModeCheckbox.parentElement.style.cursor = 'pointer';
+        }
+    }
+
+    themeSelect.addEventListener('change', updateForceDarkModeState);
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateForceDarkModeState);
 
     function openModal() {
         modal.classList.add('active');
         languageSelect.value = localStorage.getItem('zimserver_language') || 'auto';
         themeSelect.value = localStorage.getItem('zimserver_theme') || 'auto';
+        forceDarkModeCheckbox.checked = localStorage.getItem('zimserver_force_dark_mode') === 'true';
+        updateForceDarkModeState();
     }
 
     function closeModal() {
@@ -277,8 +300,11 @@ function setupSettingsModal() {
         const newTheme = themeSelect.value;
         const oldTheme = localStorage.getItem('zimserver_theme') || 'auto';
 
+        const newForceDarkMode = forceDarkModeCheckbox.checked;
+
         localStorage.setItem('zimserver_language', newLang);
         localStorage.setItem('zimserver_theme', newTheme);
+        localStorage.setItem('zimserver_force_dark_mode', newForceDarkMode);
         
         document.cookie = `zimserver_language=${newLang}; path=/; max-age=31536000`; // 1 year
         

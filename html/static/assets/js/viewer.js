@@ -5,6 +5,8 @@ let lastSearchResults = '';
 function init(archive) {
     archiveName = archive;
 
+    applyTheme();
+
     document.documentElement.classList.add('viewer-mode');
 
     const iframe = document.getElementById('contentFrame');
@@ -74,6 +76,7 @@ function init(archive) {
             iframeWin.addEventListener('popstate', updateBrowserURL);
 
             fixIframeURLs(iframeDoc);
+            applyDarkModeToIframe(iframeDoc);
 
             updateBrowserURL();
         } catch(e) {
@@ -128,6 +131,14 @@ function init(archive) {
 
     setInterval(updateBrowserURL, 500);
     setInterval(checkArchiveStatus, 5000);
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+        applyTheme();
+        const iframe = document.getElementById('contentFrame');
+        if (iframe && iframe.contentDocument) {
+            applyDarkModeToIframe(iframe.contentDocument);
+        }
+    });
 }
 
 function setIframeLocation(url) {
@@ -420,4 +431,78 @@ function checkArchiveStatus() {
             }
         })
         .catch(console.error);
+}
+
+function applyTheme() {
+    const theme = localStorage.getItem('zimserver_theme') || 'auto';
+    if (theme === 'auto') {
+        document.documentElement.removeAttribute('data-theme');
+    } else {
+        document.documentElement.setAttribute('data-theme', theme);
+    }
+}
+
+function applyDarkModeToIframe(iframeDoc) {
+    const forceDarkMode = localStorage.getItem('zimserver_force_dark_mode') === 'true';
+    const theme = localStorage.getItem('zimserver_theme') || 'auto';
+    const isDark = theme === 'dark' || (theme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+    const styleId = 'zimserver-dark-mode-style';
+    let style = iframeDoc.getElementById(styleId);
+
+    if (forceDarkMode && isDark) {
+        let hasDarkMode = false;
+        
+        if (iframeDoc.querySelector('meta[name="color-scheme"][content*="dark"]')) {
+            hasDarkMode = true;
+        }
+        
+        if (!hasDarkMode && iframeDoc.documentElement.style.colorScheme === 'dark') {
+            hasDarkMode = true;
+        }
+
+        if (!hasDarkMode && iframeDoc.body) {
+            const bodyStyle = getComputedStyle(iframeDoc.body);
+            const bodyBg = bodyStyle.backgroundColor;
+            
+            const rgbMatch = bodyBg.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+            if (rgbMatch) {
+                const r = parseInt(rgbMatch[1]);
+                const g = parseInt(rgbMatch[2]);
+                const b = parseInt(rgbMatch[3]);
+                const a = rgbMatch[4] !== undefined ? parseFloat(rgbMatch[4]) : 1;
+                
+                if (a < 0.5) {
+                    hasDarkMode = false;
+                } else {
+                    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+                    if (brightness < 128) {
+                        hasDarkMode = true;
+                    }
+                }
+            }
+        }
+
+        if (!hasDarkMode) {
+            if (!style) {
+                style = iframeDoc.createElement('style');
+                style.id = styleId;
+                style.textContent = `
+                    html {
+                        filter: invert(1) hue-rotate(180deg) !important;
+                    }
+                    img, video, iframe, canvas, svg {
+                        filter: invert(1) hue-rotate(180deg) !important;
+                    }
+                `;
+                iframeDoc.head.appendChild(style);
+            }
+        } else if (style) {
+            style.remove();
+        }
+    } else {
+        if (style) {
+            style.remove();
+        }
+    }
 }

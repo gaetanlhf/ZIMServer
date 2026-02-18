@@ -19,6 +19,7 @@
     "theme_light": "Clair",
     "theme_dark": "Sombre",
     "automatic": "Automatique",
+    "force_dark_mode": "Forcer le mode sombre dans le contenu",
     "save": "Enregistrer",
     "cancel": "Annuler",
     "close": "Fermer",
