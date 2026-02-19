@@ -337,11 +337,33 @@ function applyTheme(theme) {
     }
 }
 
+function setupImageLoading() {
+    const images = document.querySelectorAll('.archive-icon img');
+    images.forEach(img => {
+        const container = img.parentElement;
+        container.classList.add('loading');
+        
+        if (img.complete) {
+            img.classList.add('loaded');
+            container.classList.remove('loading');
+        } else {
+            img.addEventListener('load', () => {
+                img.classList.add('loaded');
+                container.classList.remove('loading');
+            });
+            img.addEventListener('error', () => {
+                container.classList.remove('loading');
+            });
+        }
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     loadFilters();
     filterArchives();
     setupSelectArrows();
     setupSettingsModal();
+    setupImageLoading();
     
     const savedTheme = localStorage.getItem('zimserver_theme') || 'auto';
     applyTheme(savedTheme);

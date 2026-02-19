@@ -463,6 +463,8 @@ select {
     justify-content: center;
     border-radius: var(--spacing-md);
     overflow: hidden;
+    position: relative;
+    background-color: var(--color-bg-hover);
 }
 
 .archive-icon img {
@@ -470,6 +472,27 @@ select {
     height: 100%;
     object-fit: contain;
     transition: opacity 0.2s;
+    opacity: 0;
+}
+
+.archive-icon img.loaded {
+    opacity: 1;
+}
+
+.archive-icon.loading::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
 }
 
 .archive-main {
