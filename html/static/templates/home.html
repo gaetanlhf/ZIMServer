@@ -2,10 +2,8 @@
 
 {{define "body"}}
 <header>
-    <div class="scroll-fade scroll-fade-left"></div>
-    <div class="scroll-fade scroll-fade-right"></div>
     <div class="filters">
-        <div class="select-wrapper">
+        <div class="select-wrapper language-wrapper">
             <select id="languageFilter" onchange="filterArchives()">
                 <option value="">{{T .Lang "home.all_languages"}}</option>
                 {{range .Languages}}
@@ -13,7 +11,7 @@
                 {{end}}
             </select>
         </div>
-        <div class="select-wrapper">
+        <div class="select-wrapper category-wrapper">
             <select id="categoryFilter" onchange="filterArchives()">
                 <option value="">{{T .Lang "home.all_categories"}}</option>
                 {{range .Categories}}
@@ -143,6 +141,8 @@
     {{end}}
 </div>
 
+<div id="toastContainer" class="toast-container"></div>
+
 <footer class="footer">
     <div class="footer-content">
         <a href="https://github.com/gaetanlhf/ZIMServer" target="_blank" class="footer-link">
@@ -195,9 +195,12 @@
                 </div>
             </div>
             <div class="form-group">
-                <label class="form-label" style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                    <input type="checkbox" id="forceDarkModeCheckbox">
+                <label class="toggle-label" for="forceDarkModeCheckbox">
                     <span>{{T .Lang "home.force_dark_mode"}}</span>
+                    <div class="toggle-switch">
+                        <input type="checkbox" id="forceDarkModeCheckbox">
+                        <span class="slider"></span>
+                    </div>
                 </label>
             </div>
         </div>
@@ -211,7 +214,10 @@
 
 {{define "scripts"}}
 <script>
-    window.i18n = {{.Translations | json}};
+    window.i18n = {{.Translations | json}} || {};
+    if (!window.i18n.home) window.i18n.home = {};
+    window.i18n.home.settings_saved = "{{T .Lang "home.settings_saved"}}";
+    window.i18n.home.back_to_top = "{{T .Lang "home.back_to_top"}}";
 </script>
 <script src="/assets/js/home.js"></script>
 {{end}}

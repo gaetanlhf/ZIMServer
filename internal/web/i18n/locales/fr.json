@@ -25,7 +25,8 @@
     "close": "Fermer",
     "archive_singular": "archive",
     "archive_plural": "archives",
-    "zero_is_singular": true
+    "zero_is_singular": true,
+    "settings_saved": "Paramètres enregistrés"
   },
   "viewer": {
     "back_to_home": "Retour à l'accueil",

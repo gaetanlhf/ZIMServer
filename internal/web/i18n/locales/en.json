@@ -25,7 +25,8 @@
     "close": "Close",
     "archive_singular": "archive",
     "archive_plural": "archives",
-    "zero_is_singular": false
+    "zero_is_singular": false,
+    "settings_saved": "Settings saved"
   },
   "viewer": {
     "back_to_home": "Back to home",

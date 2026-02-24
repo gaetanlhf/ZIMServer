@@ -269,12 +269,12 @@ function setupSettingsModal() {
         
         if (theme === 'light' || (theme === 'auto' && !isSystemDark)) {
             forceDarkModeCheckbox.disabled = true;
-            forceDarkModeCheckbox.parentElement.style.opacity = '0.5';
-            forceDarkModeCheckbox.parentElement.style.cursor = 'not-allowed';
+            forceDarkModeCheckbox.parentElement.parentElement.style.opacity = '0.5';
+            forceDarkModeCheckbox.parentElement.parentElement.style.cursor = 'not-allowed';
         } else {
             forceDarkModeCheckbox.disabled = false;
-            forceDarkModeCheckbox.parentElement.style.opacity = '1';
-            forceDarkModeCheckbox.parentElement.style.cursor = 'pointer';
+            forceDarkModeCheckbox.parentElement.parentElement.style.opacity = '1';
+            forceDarkModeCheckbox.parentElement.parentElement.style.cursor = 'pointer';
         }
     }
 
@@ -311,9 +311,11 @@ function setupSettingsModal() {
         applyTheme(newTheme);
         
         if (newLang !== oldLang) {
+            localStorage.setItem('zimserver_show_settings_saved', 'true');
             location.reload();
         } else {
             closeModal();
+            showToast(window.i18n && window.i18n.home && window.i18n.home.settings_saved ? window.i18n.home.settings_saved : 'Settings saved');
         }
     }
 
@@ -358,12 +360,46 @@ function setupImageLoading() {
     });
 }
 
+function showToast(message) {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.innerHTML = `
+        <svg class="toast-icon" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+          <path d="m10.97 4.97-.02.022-3.473 4.425-2.093-2.094a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05"/>
+        </svg>
+        <span>${message}</span>
+    `;
+    
+    container.appendChild(toast);
+    
+    void toast.offsetWidth;
+    
+    toast.classList.add('show');
+    
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+            toast.remove();
+        }, 300);
+    }, 3000);
+}
+
+function checkPendingToast() {
+    if (localStorage.getItem('zimserver_show_settings_saved') === 'true') {
+        localStorage.removeItem('zimserver_show_settings_saved');
+        showToast(window.i18n && window.i18n.home && window.i18n.home.settings_saved ? window.i18n.home.settings_saved : 'Settings saved');
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     loadFilters();
     filterArchives();
     setupSelectArrows();
     setupSettingsModal();
     setupImageLoading();
+    checkPendingToast();
     
     const savedTheme = localStorage.getItem('zimserver_theme') || 'auto';
     applyTheme(savedTheme);
