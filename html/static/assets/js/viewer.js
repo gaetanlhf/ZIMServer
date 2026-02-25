@@ -1,6 +1,7 @@
 let searchTimeout;
 let archiveName;
 let lastSearchResults = '';
+let connectionLostToast = null;
 
 function init(archive) {
     archiveName = archive;
@@ -424,13 +425,52 @@ function checkArchiveStatus() {
     if (!archiveName) return;
     
     fetch('/api/status')
-        .then(res => res.json())
+        .then(res => {
+            if (connectionLostToast) {
+                connectionLostToast.classList.add('fade-out');
+                setTimeout(() => {
+                    if (connectionLostToast) {
+                        connectionLostToast.remove();
+                        connectionLostToast = null;
+                    }
+                }, 300);
+            }
+            return res.json();
+        })
         .then(data => {
             if (!data.archives.includes(archiveName)) {
                 window.location.href = '/';
             }
         })
-        .catch(console.error);
+        .catch(err => {
+            console.error(err);
+            if (!connectionLostToast) {
+                showConnectionLostToast();
+            }
+        });
+}
+
+function showConnectionLostToast() {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = 'toast error';
+    const message = window.i18n && window.i18n.connection_lost ? window.i18n.connection_lost : 'Connection lost';
+    
+    toast.innerHTML = `
+        <svg class="toast-icon"  xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5m.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/>
+        </svg>
+        <span>${message}</span>
+    `;
+    
+    container.appendChild(toast);
+    connectionLostToast = toast;
+    
+    void toast.offsetWidth;
+    
+    toast.classList.add('show');
 }
 
 function applyTheme() {

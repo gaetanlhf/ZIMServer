@@ -10,7 +10,7 @@
     "reset_filters": "Reset Filters",
     "no_archives_available": "No archives available",
     "no_archives_prompt": "Are the ZIM files present and/or accessible?",
-    "learn_more": "Learn more about ZIMServer",
+    "powered_by": "Powered by ZIMServer",
     "check_for_updates": "Check for updates",
     "articles": "articles",
     "settings": "Interface Settings",
@@ -26,14 +26,16 @@
     "archive_singular": "archive",
     "archive_plural": "archives",
     "zero_is_singular": false,
-    "settings_saved": "Settings saved"
+    "settings_saved": "Settings saved",
+    "connection_lost": "Connection to server lost"
   },
   "viewer": {
     "back_to_home": "Back to home",
     "go_to_archive_home": "Go to archive home",
     "random_article": "Random article",
     "search": "Search...",
-    "no_results_found": "No results found"
+    "no_results_found": "No results found",
+    "connection_lost": "Connection to server lost"
   },
   "catch": {
     "external_link": "External Link",

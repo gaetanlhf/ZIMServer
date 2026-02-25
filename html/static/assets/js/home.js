@@ -97,6 +97,10 @@ function updateScrollIndicators() {
     const fadeLeft = document.querySelector('.scroll-fade-left');
     const fadeRight = document.querySelector('.scroll-fade-right');
 
+    if (!filters || !fadeLeft || !fadeRight) {
+        return;
+    }
+
     const hasOverflow = filters.scrollWidth > filters.clientWidth;
     const scrollLeft = filters.scrollLeft;
     const maxScroll = filters.scrollWidth - filters.clientWidth;
@@ -104,17 +108,8 @@ function updateScrollIndicators() {
     const canScrollLeft = scrollLeft > 1;
     const canScrollRight = scrollLeft < maxScroll - 1;
 
-    if (canScrollLeft) {
-        fadeLeft.classList.add('visible');
-    } else {
-        fadeLeft.classList.remove('visible');
-    }
-
-    if (canScrollRight && hasOverflow) {
-        fadeRight.classList.add('visible');
-    } else {
-        fadeRight.classList.remove('visible');
-    }
+    fadeLeft.classList.toggle('visible', canScrollLeft);
+    fadeRight.classList.toggle('visible', canScrollRight && hasOverflow);
 }
 
 function updateFooterScroll(footer) {
@@ -156,16 +151,57 @@ function getDisplayedArchives() {
     return names.sort().join(',');
 }
 
+let connectionLostToast = null;
+
 function checkUpdates() {
     fetch('/api/status')
-        .then(res => res.json())
+        .then(res => {
+            if (connectionLostToast) {
+                connectionLostToast.classList.add('fade-out');
+                setTimeout(() => {
+                    if (connectionLostToast) {
+                        connectionLostToast.remove();
+                        connectionLostToast = null;
+                    }
+                }, 300);
+            }
+            return res.json();
+        })
         .then(data => {
             const newArchives = data.archives.sort().join(',');
             if (currentArchives !== newArchives) {
                 location.reload();
             }
         })
-        .catch(console.error);
+        .catch(err => {
+            console.error(err);
+            if (!connectionLostToast) {
+                showConnectionLostToast();
+            }
+        });
+}
+
+function showConnectionLostToast() {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = 'toast error';
+    const message = window.i18n && window.i18n.home && window.i18n.home.connection_lost ? window.i18n.home.connection_lost : 'Connection lost';
+    
+    toast.innerHTML = `
+        <svg class="toast-icon"  xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5m.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/>
+        </svg>
+        <span>${message}</span>
+    `;
+    
+    container.appendChild(toast);
+    connectionLostToast = toast;
+    
+    void toast.offsetWidth;
+    
+    toast.classList.add('show');
 }
 
 function loadFilters() {
@@ -301,6 +337,12 @@ function setupSettingsModal() {
         const oldTheme = localStorage.getItem('zimserver_theme') || 'auto';
 
         const newForceDarkMode = forceDarkModeCheckbox.checked;
+        const oldForceDarkMode = localStorage.getItem('zimserver_force_dark_mode') === 'true';
+
+        if (newLang === oldLang && newTheme === oldTheme && newForceDarkMode === oldForceDarkMode) {
+            closeModal();
+            return;
+        }
 
         localStorage.setItem('zimserver_language', newLang);
         localStorage.setItem('zimserver_theme', newTheme);
@@ -310,7 +352,19 @@ function setupSettingsModal() {
         
         applyTheme(newTheme);
         
+        let needsReload = false;
         if (newLang !== oldLang) {
+            if (newLang === 'auto') {
+                const browserLang = navigator.language || navigator.userLanguage || '';
+                const currentPrimary = (window.currentServerLang || '').split('-')[0].toLowerCase();
+                const browserPrimary = browserLang.split('-')[0].toLowerCase();
+                needsReload = currentPrimary !== browserPrimary;
+            } else {
+                needsReload = window.currentServerLang !== newLang;
+            }
+        }
+
+        if (needsReload) {
             localStorage.setItem('zimserver_show_settings_saved', 'true');
             location.reload();
         } else {
@@ -393,6 +447,90 @@ function checkPendingToast() {
     }
 }
 
+let currentTooltip = null;
+
+function createTooltip(text) {
+    const tooltip = document.createElement('div');
+    tooltip.className = 'tooltip';
+    
+    const tooltipDescription = document.createElement('div');
+    tooltipDescription.className = 'tooltip-description';
+    tooltipDescription.textContent = text;
+    
+    tooltip.appendChild(tooltipDescription);
+    
+    return tooltip;
+}
+
+function showTooltip(element, text) {
+    hideTooltip();
+    
+    currentTooltip = createTooltip(text);
+    document.body.appendChild(currentTooltip);
+    
+    const rect = element.getBoundingClientRect();
+    const tooltipRect = currentTooltip.getBoundingClientRect();
+    
+    let left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
+    let top = rect.bottom + 10;
+    let position = 'bottom';
+    
+    if (left < 10) left = 10;
+    if (left + tooltipRect.width > window.innerWidth - 10) {
+        left = window.innerWidth - tooltipRect.width - 10;
+    }
+    
+    if (top + tooltipRect.height > window.innerHeight - 10) {
+        top = rect.top - tooltipRect.height - 10;
+        position = 'top';
+    }
+    
+    currentTooltip.className = `tooltip ${position}`;
+    
+    currentTooltip.style.left = `${left}px`;
+    currentTooltip.style.top = `${top}px`;
+    
+    const arrowOffset = Math.max(16, Math.min(tooltipRect.width - 16, rect.left + (rect.width / 2) - left));
+    currentTooltip.style.setProperty('--arrow-offset', `${arrowOffset}px`);
+    
+    requestAnimationFrame(() => {
+        if (currentTooltip) {
+            currentTooltip.classList.add('show');
+        }
+    });
+}
+
+function hideTooltip() {
+    if (currentTooltip) {
+        const tooltip = currentTooltip;
+        currentTooltip = null;
+        tooltip.classList.remove('show');
+        setTimeout(() => {
+            tooltip.remove();
+        }, 200);
+    }
+}
+
+function attachTooltipEvents(element, text) {
+    let hoverTimeout;
+    
+    element.addEventListener('mouseenter', () => {
+        clearTimeout(hoverTimeout);
+        hoverTimeout = setTimeout(() => {
+            showTooltip(element, text);
+        }, 100);
+    });
+    
+    element.addEventListener('mouseleave', () => {
+        clearTimeout(hoverTimeout);
+        hideTooltip();
+    });
+    
+    element.addEventListener('click', () => {
+        hideTooltip();
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     loadFilters();
     filterArchives();
@@ -400,7 +538,7 @@ document.addEventListener('DOMContentLoaded', function() {
     setupSettingsModal();
     setupImageLoading();
     checkPendingToast();
-    
+
     const savedTheme = localStorage.getItem('zimserver_theme') || 'auto';
     applyTheme(savedTheme);
 
@@ -408,8 +546,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     setTimeout(updateAllScrollIndicators, 100);
 
-    filters.addEventListener('scroll', updateScrollIndicators);
-    
+    if (filters) {
+        filters.addEventListener('scroll', updateScrollIndicators);
+    }
+
     document.querySelectorAll('.archive-footer').forEach(footer => {
         footer.addEventListener('scroll', () => updateFooterScroll(footer));
         updateFooterScroll(footer);
@@ -421,4 +561,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     currentArchives = getDisplayedArchives();
     setInterval(checkUpdates, 5000);
+
+    const updateBtn = document.getElementById('updateBtn');
+    if (updateBtn) {
+        const tooltipText = window.i18n && window.i18n.home && window.i18n.home.check_for_updates 
+            ? window.i18n.home.check_for_updates 
+            : 'Check for updates';
+        attachTooltipEvents(updateBtn, tooltipText);
+    }
 });

@@ -59,13 +59,16 @@
         <iframe id="contentFrame" src="/content/{{.ArchiveName}}/{{.EntryPath}}"></iframe>
         {{end}}
     </div>
+
+    <div id="toastContainer" class="toast-container"></div>
 </div>
 {{end}}
 
 {{define "scripts"}}
 <script>
     window.i18n = {
-        no_results_found: "{{T .Lang "viewer.no_results_found"}}"
+        no_results_found: "{{T .Lang "viewer.no_results_found"}}",
+        connection_lost: "{{T .Lang "viewer.connection_lost"}}"
     };
 </script>
 <script src="/assets/js/viewer.js"></script>

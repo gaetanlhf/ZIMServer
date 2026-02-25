@@ -10,7 +10,7 @@
     "reset_filters": "Réinitialiser les filtres",
     "no_archives_available": "Aucune archive disponible",
     "no_archives_prompt": "Les fichiers ZIM sont-ils présents et/ou accessibles ?",
-    "learn_more": "En savoir plus sur ZIMServer",
+    "powered_by": "Propulsé par ZIMServer",
     "check_for_updates": "Vérifier les mises à jour",
     "articles": "articles",
     "settings": "Paramètres de l'interface",
@@ -26,14 +26,16 @@
     "archive_singular": "archive",
     "archive_plural": "archives",
     "zero_is_singular": true,
-    "settings_saved": "Paramètres enregistrés"
+    "settings_saved": "Paramètres enregistrés",
+    "connection_lost": "Connexion au serveur perdue"
   },
   "viewer": {
     "back_to_home": "Retour à l'accueil",
     "go_to_archive_home": "Aller à l'accueil de l'archive",
     "random_article": "Article aléatoire",
     "search": "Rechercher...",
-    "no_results_found": "Aucun résultat trouvé"
+    "no_results_found": "Aucun résultat trouvé",
+    "connection_lost": "Connexion au serveur perdue"
   },
   "catch": {
     "external_link": "Lien externe",
