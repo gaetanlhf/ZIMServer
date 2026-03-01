@@ -17,7 +17,7 @@
             </a>
             <a href="#" onclick="loadHome(); return false;" class="archive-info" id="archiveInfo" title="{{T .Lang "viewer.go_to_archive_home"}}">
                 <div class="archive-icon-container">
-                    <img id="archiveIcon" src="/content/{{.ArchiveName}}/favicon.ico" alt="{{.ArchiveTitle}}"
+                    <img id="archiveIcon" src="{{.FaviconURL}}" alt="{{.ArchiveTitle}}"
                          onerror="this.onerror=null; this.parentElement.classList.add('has-fallback-icon');">
                     <div class="spinner">
                         <div class="spinner-border"></div>

@@ -137,6 +137,8 @@ func (h *ContentHandler) handleFavicon(w http.ResponseWriter, r *http.Request, a
 		{zimreader.NamespaceContent, "favicon.ico"},
 		{zimreader.NamespaceMetadata, "Illustration_48x48@1"},
 		{zimreader.NamespaceMetadata, "Illustration_96x96@2"},
+		{zimreader.NamespaceMetadata, "Illustration_48x48@1.png"},
+		{zimreader.NamespaceMetadata, "Illustration_96x96@2.png"},
 	}
 
 	for _, fp := range faviconPaths {
@@ -151,8 +153,8 @@ func (h *ContentHandler) handleFavicon(w http.ResponseWriter, r *http.Request, a
 		}
 
 		mimeType, _ := archive.Reader.GetMimeType(entry)
-		if mimeType == "" {
-			mimeType = "image/png"
+		if mimeType == "" || mimeType == "application/octet-stream" {
+			mimeType = services.DetectFaviconMimeType(content, fp.path)
 		}
 
 		w.Header().Set("Content-Type", mimeType)

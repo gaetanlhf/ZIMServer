@@ -42,7 +42,7 @@ func (s *FaviconService) GetFaviconInfo(archive *Archive, archiveName string) (s
 			if err != nil {
 				continue
 			}
-			mimeType = detectFaviconMimeType(content, fp.path)
+			mimeType = DetectFaviconMimeType(content, fp.path)
 		}
 
 		return faviconURL, mimeType
@@ -51,7 +51,7 @@ func (s *FaviconService) GetFaviconInfo(archive *Archive, archiveName string) (s
 	return "/content/" + archiveName + "/favicon.ico", "image/png"
 }
 
-func detectFaviconMimeType(content []byte, path string) string {
+func DetectFaviconMimeType(content []byte, path string) string {
 	if len(content) >= 8 {
 		if content[0] == 0x89 && content[1] == 0x50 && content[2] == 0x4E && content[3] == 0x47 {
 			return "image/png"

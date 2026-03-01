@@ -41,6 +41,8 @@ type Metadata struct {
 	Tags         string
 	Category     string
 	EntryCount   uint32
+	FaviconURL   string
+	FaviconType  string
 }
 
 type LanguageInfo struct {
@@ -85,6 +87,11 @@ func (s *ArchiveService) LoadZIM(path string) error {
 		IndexMgr: indexMgr,
 		Metadata: metadata,
 	}
+
+	faviconService := NewFaviconService()
+	faviconURL, faviconType := faviconService.GetFaviconInfo(archive, name)
+	archive.Metadata.FaviconURL = faviconURL
+	archive.Metadata.FaviconType = faviconType
 
 	s.mu.Lock()
 	s.archives[name] = archive
