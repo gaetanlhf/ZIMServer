@@ -14,10 +14,10 @@ import (
 )
 
 type ContentHandler struct {
-	ArchiveService *services.ArchiveService
-	FaviconService *services.FaviconService
-	Templates      TemplateRenderer
-	I18n           *i18n.I18n
+	ArchiveService      *services.ArchiveService
+	IllustrationService *services.IllustrationService
+	Templates           TemplateRenderer
+	I18n                *i18n.I18n
 }
 
 var timeZero = time.Time{}
@@ -66,7 +66,7 @@ func (h *ContentHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if parts[1] == "favicon.ico" {
-		h.handleFavicon(w, r, archive, archiveName)
+		h.handleIllustration(w, r, archive, archiveName)
 		return
 	}
 
@@ -123,11 +123,11 @@ func (h *ContentHandler) handleResource(w http.ResponseWriter, r *http.Request, 
 	http.ServeContent(w, r, filepath.Base(resourcePath), timeZero, file.(http.File))
 }
 
-func (h *ContentHandler) handleFavicon(w http.ResponseWriter, r *http.Request, archive *services.Archive, archiveName string) {
-	faviconURL, mimeType := h.FaviconService.GetFaviconInfo(archive, archiveName)
+func (h *ContentHandler) handleIllustration(w http.ResponseWriter, r *http.Request, archive *services.Archive, archiveName string) {
+	illustrationURL, mimeType := h.IllustrationService.GetIllustrationInfo(archive, archiveName)
 
-	if faviconURL != "" {
-		path := strings.TrimPrefix(faviconURL, "/content/"+archiveName+"/")
+	if illustrationURL != "" {
+		path := strings.TrimPrefix(illustrationURL, "/content/"+archiveName+"/")
 		entry, err := archive.FS.GetEntry(path)
 		if err == nil {
 			content, err := archive.Reader.GetContent(entry)
@@ -139,7 +139,7 @@ func (h *ContentHandler) handleFavicon(w http.ResponseWriter, r *http.Request, a
 		}
 	}
 
-	// Fallback to serving a default favicon or a 404
+	// Fallback to serving a default illustration or a 404
 	http.NotFound(w, r)
 }
 

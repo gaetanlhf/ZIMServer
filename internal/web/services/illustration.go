@@ -7,20 +7,20 @@ import (
 	zimreader "github.com/gaetanlhf/ZIMServer/internal/zim/reader"
 )
 
-type FaviconService struct{}
+type IllustrationService struct{}
 
-func NewFaviconService() *FaviconService {
-	return &FaviconService{}
+func NewIllustrationService() *IllustrationService {
+	return &IllustrationService{}
 }
 
-func (s *FaviconService) GetFaviconInfo(archive *Archive, archiveName string) (string, string) {
-	faviconPaths := []struct {
+func (s *IllustrationService) GetIllustrationInfo(archive *Archive, archiveName string) (string, string) {
+	illustrationPaths := []struct {
 		namespace byte
 		path      string
 	}{
+		{zimreader.NamespaceMetadata, "Illustration_96x96@1"},
 		{zimreader.NamespaceMetadata, "Illustration_48x48@1"},
 		{zimreader.NamespaceMetadata, "Illustration_48x48@2"},
-		{zimreader.NamespaceMetadata, "Illustration_96x96@1"},
 		{zimreader.NamespaceWellKnown, "favicon"},
 		{zimreader.NamespaceWellKnown, "favicon.png"},
 		{zimreader.NamespaceWellKnown, "favicon.ico"},
@@ -29,13 +29,13 @@ func (s *FaviconService) GetFaviconInfo(archive *Archive, archiveName string) (s
 		{zimreader.NamespaceContent, "favicon.ico"},
 	}
 
-	for _, fp := range faviconPaths {
+	for _, fp := range illustrationPaths {
 		entry, err := archive.Reader.GetEntryByURL(fp.namespace, fp.path)
 		if err != nil {
 			continue
 		}
 
-		faviconURL := fmt.Sprintf("/content/%s/%s", archiveName, entry.GetPath())
+		illustrationURL := fmt.Sprintf("/content/%s/%s", archiveName, entry.GetPath())
 
 		mimeType, _ := archive.Reader.GetMimeType(entry)
 		if mimeType == "" {
@@ -43,16 +43,16 @@ func (s *FaviconService) GetFaviconInfo(archive *Archive, archiveName string) (s
 			if err != nil {
 				continue
 			}
-			mimeType = DetectFaviconMimeType(content, fp.path)
+			mimeType = detectIllustrationMimeType(content, fp.path)
 		}
 
-		return faviconURL, mimeType
+		return illustrationURL, mimeType
 	}
 
 	return "/content/" + archiveName + "/favicon.ico", "image/png"
 }
 
-func DetectFaviconMimeType(content []byte, path string) string {
+func detectIllustrationMimeType(content []byte, path string) string {
 	if len(content) >= 8 {
 		if content[0] == 0x89 && content[1] == 0x50 && content[2] == 0x4E && content[3] == 0x47 {
 			return "image/png"

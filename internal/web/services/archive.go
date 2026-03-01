@@ -31,18 +31,18 @@ type Archive struct {
 }
 
 type Metadata struct {
-	Title        string
-	Description  string
-	Language     string
-	LanguageCode string
-	Creator      string
-	Publisher    string
-	Date         string
-	Tags         string
-	Category     string
-	EntryCount   uint32
-	FaviconURL   string
-	FaviconType  string
+	Title            string
+	Description      string
+	Language         string
+	LanguageCode     string
+	Creator          string
+	Publisher        string
+	Date             string
+	Tags             string
+	Category         string
+	EntryCount       uint32
+	IllustrationURL  string
+	IllustrationType string
 }
 
 type LanguageInfo struct {
@@ -88,10 +88,10 @@ func (s *ArchiveService) LoadZIM(path string) error {
 		Metadata: metadata,
 	}
 
-	faviconService := NewFaviconService()
-	faviconURL, faviconType := faviconService.GetFaviconInfo(archive, name)
-	archive.Metadata.FaviconURL = faviconURL
-	archive.Metadata.FaviconType = faviconType
+	faviconService := NewIllustrationService()
+	faviconURL, faviconType := faviconService.GetIllustrationInfo(archive, name)
+	archive.Metadata.IllustrationURL = faviconURL
+	archive.Metadata.IllustrationType = faviconType
 
 	s.mu.Lock()
 	s.archives[name] = archive

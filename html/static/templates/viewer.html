@@ -1,8 +1,8 @@
 {{define "title"}}{{.ArchiveTitle}}{{end}}
 
 {{define "head"}}
-{{if .FaviconURL}}
-<link rel="icon" type="{{.FaviconType}}" href="{{.FaviconURL}}">
+{{if .IllustrationURL}}
+<link rel="icon" type="{{.IllustrationType}}" href="{{.IllustrationURL}}">
 {{end}}
 {{end}}
 
@@ -17,7 +17,7 @@
             </a>
             <a href="#" onclick="loadHome(); return false;" class="archive-info" id="archiveInfo" title="{{T .Lang "viewer.go_to_archive_home"}}">
                 <div class="archive-icon-container">
-                    <img id="archiveIcon" src="{{.FaviconURL}}" alt="{{.ArchiveTitle}}"
+                    <img id="archiveIcon" src="{{.IllustrationURL}}" alt="{{.ArchiveTitle}}"
                          onerror="this.onerror=null; this.parentElement.classList.add('has-fallback-icon');">
                     <div class="spinner">
                         <div class="spinner-border"></div>

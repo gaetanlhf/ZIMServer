@@ -13,14 +13,14 @@ import (
 )
 
 type Server struct {
-	archiveService *services.ArchiveService
-	faviconService *services.FaviconService
-	searchService  *services.SearchService
-	homeHandler    *handlers.HomeHandler
-	viewerHandler  *handlers.ViewerHandler
-	contentHandler *handlers.ContentHandler
-	apiHandler     *handlers.APIHandler
-	i18n           *i18n.I18n
+	archiveService      *services.ArchiveService
+	illustrationService *services.IllustrationService
+	searchService       *services.SearchService
+	homeHandler         *handlers.HomeHandler
+	viewerHandler       *handlers.ViewerHandler
+	contentHandler      *handlers.ContentHandler
+	apiHandler          *handlers.APIHandler
+	i18n                *i18n.I18n
 }
 
 func NewServer(version string) (*Server, error) {
@@ -35,7 +35,7 @@ func NewServer(version string) (*Server, error) {
 	}
 
 	archiveService := services.NewArchiveService()
-	faviconService := services.NewFaviconService()
+	illustrationService := services.NewIllustrationService()
 	searchService := services.NewSearchService()
 
 	homeHandler := &handlers.HomeHandler{
@@ -46,17 +46,17 @@ func NewServer(version string) (*Server, error) {
 	}
 
 	viewerHandler := &handlers.ViewerHandler{
-		ArchiveService: archiveService,
-		FaviconService: faviconService,
-		Templates:      tmpl,
-		I18n:           i18n,
+		ArchiveService:      archiveService,
+		IllustrationService: illustrationService,
+		Templates:           tmpl,
+		I18n:                i18n,
 	}
 
 	contentHandler := &handlers.ContentHandler{
-		ArchiveService: archiveService,
-		FaviconService: faviconService,
-		Templates:      tmpl,
-		I18n:           i18n,
+		ArchiveService:      archiveService,
+		IllustrationService: illustrationService,
+		Templates:           tmpl,
+		I18n:                i18n,
 	}
 
 	apiHandler := &handlers.APIHandler{
@@ -65,14 +65,14 @@ func NewServer(version string) (*Server, error) {
 	}
 
 	return &Server{
-		archiveService: archiveService,
-		faviconService: faviconService,
-		searchService:  searchService,
-		homeHandler:    homeHandler,
-		viewerHandler:  viewerHandler,
-		contentHandler: contentHandler,
-		apiHandler:     apiHandler,
-		i18n:           i18n,
+		archiveService:      archiveService,
+		illustrationService: illustrationService,
+		searchService:       searchService,
+		homeHandler:         homeHandler,
+		viewerHandler:       viewerHandler,
+		contentHandler:      contentHandler,
+		apiHandler:          apiHandler,
+		i18n:                i18n,
 	}, nil
 }
 

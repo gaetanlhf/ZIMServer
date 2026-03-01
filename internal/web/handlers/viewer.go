@@ -13,23 +13,23 @@ import (
 )
 
 type ViewerHandler struct {
-	ArchiveService *services.ArchiveService
-	FaviconService *services.FaviconService
-	Templates      TemplateRenderer
-	I18n           *i18n.I18n
+	ArchiveService      *services.ArchiveService
+	IllustrationService *services.IllustrationService
+	Templates           TemplateRenderer
+	I18n                *i18n.I18n
 }
 
 type ViewerData struct {
-	ArchiveName  string
-	ArchiveTitle string
-	EntryPath    string
-	FaviconURL   string
-	FaviconType  string
-	HasIndex     bool
-	IsCatch      bool
-	CatchURL     string
-	CatchSrc     template.URL
-	Lang         string
+	ArchiveName     string
+	ArchiveTitle    string
+	EntryPath       string
+	IllustrationURL string
+	IllustrationType string
+	HasIndex        bool
+	IsCatch         bool
+	CatchURL        string
+	CatchSrc        template.URL
+	Lang            string
 }
 
 func (h *ViewerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -83,20 +83,20 @@ func (h *ViewerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	entryPath := parts[1]
 
-	faviconURL, faviconType := h.FaviconService.GetFaviconInfo(archive, archiveName)
+	illustrationURL, illustrationType := h.IllustrationService.GetIllustrationInfo(archive, archiveName)
 
 	hasIndex := archive.IndexMgr != nil
 	lang := h.I18n.GetLanguage(r)
 
 	data := ViewerData{
-		ArchiveName:  archiveName,
-		ArchiveTitle: archive.Metadata.Title,
-		EntryPath:    entryPath,
-		FaviconURL:   faviconURL,
-		FaviconType:  faviconType,
-		HasIndex:     hasIndex,
-		IsCatch:      false,
-		Lang:         lang,
+		ArchiveName:     archiveName,
+		ArchiveTitle:    archive.Metadata.Title,
+		EntryPath:       entryPath,
+		IllustrationURL: illustrationURL,
+		IllustrationType: illustrationType,
+		HasIndex:        hasIndex,
+		IsCatch:         false,
+		Lang:            lang,
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -137,19 +137,19 @@ func (h *ViewerHandler) handleCatch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	faviconURL, faviconType := h.FaviconService.GetFaviconInfo(archive, viewer)
+	illustrationURL, illustrationType := h.IllustrationService.GetIllustrationInfo(archive, viewer)
 	hasIndex := archive.IndexMgr != nil
 
 	data := ViewerData{
-		ArchiveName:  viewer,
-		ArchiveTitle: archive.Metadata.Title,
-		FaviconURL:   faviconURL,
-		FaviconType:  faviconType,
-		HasIndex:     hasIndex,
-		IsCatch:      true,
-		CatchURL:     catchURL,
-		CatchSrc:     template.URL("/catch?url=" + url.QueryEscape(catchURL)),
-		Lang:         lang,
+		ArchiveName:     viewer,
+		ArchiveTitle:    archive.Metadata.Title,
+		IllustrationURL: illustrationURL,
+		IllustrationType: illustrationType,
+		HasIndex:        hasIndex,
+		IsCatch:         true,
+		CatchURL:        catchURL,
+		CatchSrc:        template.URL("/catch?url=" + url.QueryEscape(catchURL)),
+		Lang:            lang,
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")

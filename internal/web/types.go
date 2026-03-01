@@ -44,11 +44,11 @@ type HomeData struct {
 }
 
 type ViewerData struct {
-	ArchiveName  string
-	ArchiveTitle string
-	EntryPath    string
-	FaviconURL   string
-	FaviconType  string
+	ArchiveName      string
+	ArchiveTitle     string
+	EntryPath        string
+	IllustrationURL  string
+	IllustrationType string
 }
 
 type TemplateRenderer interface {
