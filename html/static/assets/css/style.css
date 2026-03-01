@@ -297,13 +297,9 @@ input[type="text"]:focus {
     width: 12px;
     height: 12px;
     background-color: var(--color-text-muted);
-    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
     mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
-    -webkit-mask-repeat: no-repeat;
     mask-repeat: no-repeat;
-    -webkit-mask-position: center;
     mask-position: center;
-    -webkit-mask-size: contain;
     mask-size: contain;
     pointer-events: none;
     transition: transform var(--transition);
@@ -319,8 +315,6 @@ select {
     min-width: 180px;
     flex-shrink: 0;
     appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
     padding-right: 2.5rem;
     background-image: none;
     cursor: pointer;
@@ -662,23 +656,19 @@ select {
     -ms-overflow-style: none;
     background-color: var(--color-bg-subtle);
     mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
-    -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
     transition: mask-image 0.3s ease, -webkit-mask-image 0.3s ease;
 }
 
 .archive-footer.no-scroll-left {
     mask-image: linear-gradient(to right, black 90%, transparent);
-    -webkit-mask-image: linear-gradient(to right, black 90%, transparent);
 }
 
 .archive-footer.no-scroll-right {
     mask-image: linear-gradient(to right, transparent, black 10%);
-    -webkit-mask-image: linear-gradient(to right, transparent, black 10%);
 }
 
 .archive-footer.no-scroll {
     mask-image: none;
-    -webkit-mask-image: none;
 }
 
 .archive-footer::-webkit-scrollbar {
@@ -1553,4 +1543,20 @@ input:checked + .slider:before {
     left: var(--arrow-offset, 50%);
     border-bottom: none;
     border-top: 6px solid var(--color-bg-white);
+}
+
+.has-fallback-icon img {
+    display: none;
+}
+
+.has-fallback-icon::after {
+    content: "";
+    display: block;
+    width: 100%;
+    height: 100%;
+    background-color: var(--color-text-muted);
+    mask-image: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M4%200h5.293A1%201%200%200%201%2010%20.293L13.707%204a1%201%200%200%201%20.293.707V14a2%202%200%200%201-2%202H4a2%202%200%200%201-2-2V2a2%202%200%200%201%202-2m5.5%201.5v2a1%201%200%200%200%201%201h2z%22%2F%3E%3C%2Fsvg%3E');
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    mask-position: center;
 }
