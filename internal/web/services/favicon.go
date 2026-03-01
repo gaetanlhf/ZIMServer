@@ -18,14 +18,15 @@ func (s *FaviconService) GetFaviconInfo(archive *Archive, archiveName string) (s
 		namespace byte
 		path      string
 	}{
+		{zimreader.NamespaceMetadata, "Illustration_48x48@1"},
+		{zimreader.NamespaceMetadata, "Illustration_48x48@2"},
+		{zimreader.NamespaceMetadata, "Illustration_96x96@1"},
 		{zimreader.NamespaceWellKnown, "favicon"},
 		{zimreader.NamespaceWellKnown, "favicon.png"},
 		{zimreader.NamespaceWellKnown, "favicon.ico"},
 		{zimreader.NamespaceContent, "favicon"},
 		{zimreader.NamespaceContent, "favicon.png"},
 		{zimreader.NamespaceContent, "favicon.ico"},
-		{zimreader.NamespaceMetadata, "Illustration_48x48@1"},
-		{zimreader.NamespaceMetadata, "Illustration_96x96@2"},
 	}
 
 	for _, fp := range faviconPaths {

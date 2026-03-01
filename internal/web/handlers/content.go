@@ -11,7 +11,6 @@ import (
 	"github.com/gaetanlhf/ZIMServer/internal/web/i18n"
 	"github.com/gaetanlhf/ZIMServer/internal/web/services"
 	"github.com/gaetanlhf/ZIMServer/internal/web/utils"
-	zimreader "github.com/gaetanlhf/ZIMServer/internal/zim/reader"
 )
 
 type ContentHandler struct {
@@ -67,7 +66,7 @@ func (h *ContentHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if parts[1] == "favicon.ico" {
-		h.handleFavicon(w, r, archive)
+		h.handleFavicon(w, r, archive, archiveName)
 		return
 	}
 
@@ -124,44 +123,23 @@ func (h *ContentHandler) handleResource(w http.ResponseWriter, r *http.Request, 
 	http.ServeContent(w, r, filepath.Base(resourcePath), timeZero, file.(http.File))
 }
 
-func (h *ContentHandler) handleFavicon(w http.ResponseWriter, r *http.Request, archive *services.Archive) {
-	faviconPaths := []struct {
-		namespace byte
-		path      string
-	}{
-		{zimreader.NamespaceWellKnown, "favicon"},
-		{zimreader.NamespaceWellKnown, "favicon.png"},
-		{zimreader.NamespaceWellKnown, "favicon.ico"},
-		{zimreader.NamespaceContent, "favicon"},
-		{zimreader.NamespaceContent, "favicon.png"},
-		{zimreader.NamespaceContent, "favicon.ico"},
-		{zimreader.NamespaceMetadata, "Illustration_48x48@1"},
-		{zimreader.NamespaceMetadata, "Illustration_96x96@2"},
-		{zimreader.NamespaceMetadata, "Illustration_48x48@1.png"},
-		{zimreader.NamespaceMetadata, "Illustration_96x96@2.png"},
+func (h *ContentHandler) handleFavicon(w http.ResponseWriter, r *http.Request, archive *services.Archive, archiveName string) {
+	faviconURL, mimeType := h.FaviconService.GetFaviconInfo(archive, archiveName)
+
+	if faviconURL != "" {
+		path := strings.TrimPrefix(faviconURL, "/content/"+archiveName+"/")
+		entry, err := archive.FS.GetEntry(path)
+		if err == nil {
+			content, err := archive.Reader.GetContent(entry)
+			if err == nil {
+				w.Header().Set("Content-Type", mimeType)
+				w.Write(content)
+				return
+			}
+		}
 	}
 
-	for _, fp := range faviconPaths {
-		entry, err := archive.Reader.GetEntryByURL(fp.namespace, fp.path)
-		if err != nil {
-			continue
-		}
-
-		content, err := archive.Reader.GetContent(entry)
-		if err != nil {
-			continue
-		}
-
-		mimeType, _ := archive.Reader.GetMimeType(entry)
-		if mimeType == "" || mimeType == "application/octet-stream" {
-			mimeType = services.DetectFaviconMimeType(content, fp.path)
-		}
-
-		w.Header().Set("Content-Type", mimeType)
-		w.Write(content)
-		return
-	}
-
+	// Fallback to serving a default favicon or a 404
 	http.NotFound(w, r)
 }
 
