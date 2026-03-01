@@ -7,15 +7,17 @@ import (
 )
 
 const (
-	colorReset  = "\033[0m"
-	colorRed    = "\033[31m"
-	colorGreen  = "\033[32m"
-	colorYellow = "\033[33m"
-	colorGray   = "\033[90m"
+	ColorReset  = "\033[0m"
+	ColorRed    = "\033[31m"
+	ColorGreen  = "\033[32m"
+	ColorYellow = "\033[33m"
+	ColorBlue   = "\033[34m"
+	ColorGray   = "\033[90m"
 
-	symbolSuccess = "✓"
-	symbolWarning = "⚠"
-	symbolError   = "✗"
+	SymbolSuccess  = "✓"
+	SymbolWarning  = "⚠"
+	SymbolError    = "✗"
+	SymbolRedirect = "➜"
 )
 
 type responseWriter struct {
@@ -45,21 +47,24 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 		var statusColor string
 
 		if rw.statusCode >= 500 {
-			logSymbol = symbolError
-			statusColor = colorRed
+			logSymbol = SymbolError
+			statusColor = ColorRed
 		} else if rw.statusCode >= 400 {
-			logSymbol = symbolWarning
-			statusColor = colorYellow
+			logSymbol = SymbolWarning
+			statusColor = ColorYellow
+		} else if rw.statusCode >= 300 && rw.statusCode < 400 {
+			logSymbol = SymbolRedirect
+			statusColor = ColorBlue
 		} else {
-			logSymbol = symbolSuccess
-			statusColor = colorGreen
+			logSymbol = SymbolSuccess
+			statusColor = ColorGreen
 		}
 
 		log.Printf("%s%s%s %s%s%s %s %s%d%s %v",
-			statusColor, logSymbol, colorReset,
-			colorGray, r.Method, colorReset,
+			statusColor, logSymbol, ColorReset,
+			ColorGray, r.Method, ColorReset,
 			r.URL.Path,
-			statusColor, rw.statusCode, colorReset,
+			statusColor, rw.statusCode, ColorReset,
 			duration.Round(time.Millisecond),
 		)
 	})

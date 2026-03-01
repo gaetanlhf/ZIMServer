@@ -93,7 +93,10 @@ func (h *ContentHandler) handleResource(w http.ResponseWriter, r *http.Request, 
 		targetPath := resolvedEntry.GetPath()
 		redirectURL := fmt.Sprintf("/content/%s/%s", archive.Name, targetPath)
 
-		log.Printf("Redirect: %s -> %s", resourcePath, targetPath)
+		log.Printf("%s%s%s %sRedirect:%s %s -> %s",
+			utils.ColorBlue, utils.SymbolRedirect, utils.ColorReset,
+			utils.ColorGray, utils.ColorReset,
+			resourcePath, targetPath)
 
 		http.Redirect(w, r, redirectURL, http.StatusMovedPermanently)
 		return
