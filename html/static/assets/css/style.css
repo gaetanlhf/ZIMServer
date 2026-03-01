@@ -1419,17 +1419,31 @@ input:checked + .slider:before {
     border-color: #991b1b;
 }
 
+.toast.success {
+    background: #10b981;
+    color: #ffffff;
+    border-color: #059669;
+}
+
+[data-theme="dark"] .toast.success {
+    background: #059669;
+    color: #ffffff;
+    border-color: #047857;
+}
+
 .toast-icon {
     width: 18px;
     height: 18px;
     color: var(--color-primary);
 }
 
-.toast.error .toast-icon {
+.toast.error .toast-icon,
+.toast.success .toast-icon {
     color: #ffffff;
 }
 
-[data-theme="dark"] .toast.error .toast-icon {
+[data-theme="dark"] .toast.error .toast-icon,
+[data-theme="dark"] .toast.success .toast-icon {
     color: #ffffff;
 }
 

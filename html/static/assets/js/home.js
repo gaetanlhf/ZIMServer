@@ -157,13 +157,8 @@ function checkUpdates() {
     fetch('/api/status')
         .then(res => {
             if (connectionLostToast) {
-                connectionLostToast.classList.add('fade-out');
-                setTimeout(() => {
-                    if (connectionLostToast) {
-                        connectionLostToast.remove();
-                        connectionLostToast = null;
-                    }
-                }, 300);
+                hideToast(connectionLostToast);
+                connectionLostToast = null;
             }
             return res.json();
         })
@@ -182,26 +177,8 @@ function checkUpdates() {
 }
 
 function showConnectionLostToast() {
-    const container = document.getElementById('toastContainer');
-    if (!container) return;
-
-    const toast = document.createElement('div');
-    toast.className = 'toast error';
     const message = window.i18n && window.i18n.home && window.i18n.home.connection_lost ? window.i18n.home.connection_lost : 'Connection lost';
-    
-    toast.innerHTML = `
-        <svg class="toast-icon"  xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
-          <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5m.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/>
-        </svg>
-        <span>${message}</span>
-    `;
-    
-    container.appendChild(toast);
-    connectionLostToast = toast;
-    
-    void toast.offsetWidth;
-    
-    toast.classList.add('show');
+    connectionLostToast = showToast(message, 'error', 0);
 }
 
 function loadFilters() {
@@ -369,7 +346,7 @@ function setupSettingsModal() {
             location.reload();
         } else {
             closeModal();
-            showToast(window.i18n && window.i18n.home && window.i18n.home.settings_saved ? window.i18n.home.settings_saved : 'Settings saved');
+            showToast(window.i18n && window.i18n.home && window.i18n.home.settings_saved ? window.i18n.home.settings_saved : 'Settings saved', 'success');
         }
     }
 
@@ -414,36 +391,51 @@ function setupImageLoading() {
     });
 }
 
-function showToast(message) {
+function showToast(message, type = 'info', duration = 3000) {
     const container = document.getElementById('toastContainer');
+    if (!container) return null;
+
     const toast = document.createElement('div');
-    toast.className = 'toast';
-    toast.innerHTML = `
-        <svg class="toast-icon" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+    toast.className = 'toast ' + type;
+    
+    let iconSvg = '';
+    if (type === 'error') {
+        iconSvg = `<svg class="toast-icon" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5m.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/>
+        </svg>`;
+    } else {
+        iconSvg = `<svg class="toast-icon" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
           <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
           <path d="m10.97 4.97-.02.022-3.473 4.425-2.093-2.094a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05"/>
-        </svg>
-        <span>${message}</span>
-    `;
-    
+        </svg>`;
+    }
+
+    toast.innerHTML = `${iconSvg}<span>${message}</span>`;
     container.appendChild(toast);
     
     void toast.offsetWidth;
-    
     toast.classList.add('show');
     
+    if (duration > 0) {
+        setTimeout(() => hideToast(toast), duration);
+    }
+    
+    return toast;
+}
+
+function hideToast(toast) {
+    if (!toast) return;
+    toast.classList.remove('show');
+    toast.classList.add('fade-out');
     setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => {
-            toast.remove();
-        }, 300);
-    }, 3000);
+        toast.remove();
+    }, 300);
 }
 
 function checkPendingToast() {
     if (localStorage.getItem('zimserver_show_settings_saved') === 'true') {
         localStorage.removeItem('zimserver_show_settings_saved');
-        showToast(window.i18n && window.i18n.home && window.i18n.home.settings_saved ? window.i18n.home.settings_saved : 'Settings saved');
+        showToast(window.i18n && window.i18n.home && window.i18n.home.settings_saved ? window.i18n.home.settings_saved : 'Settings saved', 'success');
     }
 }
 
