@@ -1,6 +1,6 @@
 build:
 	go mod download
-	CGO_ENABLED=0 go build -ldflags "-s -w -X main.version=`git describe --tags --always | sed 's/^v//'`" -o zimserver ./cmd/zimserver
+	CGO_ENABLED=0 go build -ldflags "-s -w -X main.version=`git describe --tags --abbrev=0 | sed 's/^v//'`" -o zimserver ./cmd/zimserver
 
 default: build
 
