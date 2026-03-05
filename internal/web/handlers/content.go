@@ -16,6 +16,7 @@ import (
 type ContentHandler struct {
 	ArchiveService      *services.ArchiveService
 	IllustrationService *services.IllustrationService
+	FaviconService      *services.FaviconService
 	Templates           TemplateRenderer
 	I18n                *i18n.I18n
 }
@@ -124,7 +125,11 @@ func (h *ContentHandler) handleResource(w http.ResponseWriter, r *http.Request, 
 }
 
 func (h *ContentHandler) handleIllustration(w http.ResponseWriter, r *http.Request, archive *services.Archive, archiveName string) {
-	illustrationURL, mimeType := h.IllustrationService.GetIllustrationInfo(archive, archiveName)
+	illustrationURL, mimeType := h.IllustrationService.GetIllustration(archive, archiveName)
+	
+	if illustrationURL == "" {
+		illustrationURL, mimeType = h.FaviconService.GetFavicon(archive, archiveName)
+	}
 
 	if illustrationURL != "" {
 		path := strings.TrimPrefix(illustrationURL, "/content/"+archiveName+"/")

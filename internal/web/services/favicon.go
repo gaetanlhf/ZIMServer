@@ -7,29 +7,32 @@ import (
 	zimreader "github.com/gaetanlhf/ZIMServer/internal/zim/reader"
 )
 
-type IllustrationService struct{}
+type FaviconService struct{}
 
-func NewIllustrationService() *IllustrationService {
-	return &IllustrationService{}
+func NewFaviconService() *FaviconService {
+	return &FaviconService{}
 }
 
-func (s *IllustrationService) GetIllustration(archive *Archive, archiveName string) (string, string) {
-	illustrationPaths := []struct {
+func (s *FaviconService) GetFavicon(archive *Archive, archiveName string) (string, string) {
+	faviconPaths := []struct {
 		namespace byte
 		path      string
 	}{
-		{zimreader.NamespaceMetadata, "Illustration_96x96@1"},
-		{zimreader.NamespaceMetadata, "Illustration_48x48@1"},
-		{zimreader.NamespaceMetadata, "Illustration_48x48@2"},
+		{zimreader.NamespaceWellKnown, "favicon"},
+		{zimreader.NamespaceContent, "favicon"},
+		{zimreader.NamespaceWellKnown, "favicon.png"},
+		{zimreader.NamespaceContent, "favicon.png"},
+		{zimreader.NamespaceWellKnown, "favicon.ico"},
+		{zimreader.NamespaceContent, "favicon.ico"},
 	}
 
-	for _, fp := range illustrationPaths {
+	for _, fp := range faviconPaths {
 		entry, err := archive.Reader.GetEntryByURL(fp.namespace, fp.path)
 		if err != nil {
 			continue
 		}
 
-		illustrationURL := fmt.Sprintf("/content/%s/%s", archiveName, entry.GetPath())
+		faviconURL := fmt.Sprintf("/content/%s/%s", archiveName, entry.GetPath())
 
 		mimeType, _ := archive.Reader.GetMimeType(entry)
 		if mimeType == "" || !strings.HasPrefix(mimeType, "image/") {
@@ -47,7 +50,7 @@ func (s *IllustrationService) GetIllustration(archive *Archive, archiveName stri
 			continue
 		}
 
-		return illustrationURL, mimeType
+		return faviconURL, mimeType
 	}
 
 	return "", ""

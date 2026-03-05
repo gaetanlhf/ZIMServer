@@ -15,6 +15,7 @@ import (
 type Server struct {
 	archiveService      *services.ArchiveService
 	illustrationService *services.IllustrationService
+	faviconService      *services.FaviconService
 	searchService       *services.SearchService
 	homeHandler         *handlers.HomeHandler
 	viewerHandler       *handlers.ViewerHandler
@@ -36,6 +37,7 @@ func NewServer(version string) (*Server, error) {
 
 	archiveService := services.NewArchiveService()
 	illustrationService := services.NewIllustrationService()
+	faviconService := services.NewFaviconService()
 	searchService := services.NewSearchService()
 
 	homeHandler := &handlers.HomeHandler{
@@ -48,6 +50,7 @@ func NewServer(version string) (*Server, error) {
 	viewerHandler := &handlers.ViewerHandler{
 		ArchiveService:      archiveService,
 		IllustrationService: illustrationService,
+		FaviconService:      faviconService,
 		Templates:           tmpl,
 		I18n:                i18n,
 	}
@@ -55,6 +58,7 @@ func NewServer(version string) (*Server, error) {
 	contentHandler := &handlers.ContentHandler{
 		ArchiveService:      archiveService,
 		IllustrationService: illustrationService,
+		FaviconService:      faviconService,
 		Templates:           tmpl,
 		I18n:                i18n,
 	}
@@ -67,6 +71,7 @@ func NewServer(version string) (*Server, error) {
 	return &Server{
 		archiveService:      archiveService,
 		illustrationService: illustrationService,
+		faviconService:      faviconService,
 		searchService:       searchService,
 		homeHandler:         homeHandler,
 		viewerHandler:       viewerHandler,

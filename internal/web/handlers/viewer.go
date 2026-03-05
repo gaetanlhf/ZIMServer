@@ -15,6 +15,7 @@ import (
 type ViewerHandler struct {
 	ArchiveService      *services.ArchiveService
 	IllustrationService *services.IllustrationService
+	FaviconService      *services.FaviconService
 	Templates           TemplateRenderer
 	I18n                *i18n.I18n
 }
@@ -25,6 +26,8 @@ type ViewerData struct {
 	EntryPath       string
 	IllustrationURL string
 	IllustrationType string
+	FaviconURL      string
+	FaviconType     string
 	HasIndex        bool
 	IsCatch         bool
 	CatchURL        string
@@ -83,7 +86,12 @@ func (h *ViewerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	entryPath := parts[1]
 
-	illustrationURL, illustrationType := h.IllustrationService.GetIllustrationInfo(archive, archiveName)
+	illustrationURL, illustrationType := h.IllustrationService.GetIllustration(archive, archiveName)
+	if illustrationURL == "" {
+		illustrationURL, illustrationType = h.FaviconService.GetFavicon(archive, archiveName)
+	}
+	
+	faviconURL, faviconType := h.FaviconService.GetFavicon(archive, archiveName)
 
 	hasIndex := archive.IndexMgr != nil
 	lang := h.I18n.GetLanguage(r)
@@ -94,6 +102,8 @@ func (h *ViewerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		EntryPath:       entryPath,
 		IllustrationURL: illustrationURL,
 		IllustrationType: illustrationType,
+		FaviconURL:      faviconURL,
+		FaviconType:     faviconType,
 		HasIndex:        hasIndex,
 		IsCatch:         false,
 		Lang:            lang,
@@ -137,7 +147,12 @@ func (h *ViewerHandler) handleCatch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	illustrationURL, illustrationType := h.IllustrationService.GetIllustrationInfo(archive, viewer)
+	illustrationURL, illustrationType := h.IllustrationService.GetIllustration(archive, viewer)
+	if illustrationURL == "" {
+		illustrationURL, illustrationType = h.FaviconService.GetFavicon(archive, viewer)
+	}
+	faviconURL, faviconType := h.FaviconService.GetFavicon(archive, viewer)
+	
 	hasIndex := archive.IndexMgr != nil
 
 	data := ViewerData{
@@ -145,6 +160,8 @@ func (h *ViewerHandler) handleCatch(w http.ResponseWriter, r *http.Request) {
 		ArchiveTitle:    archive.Metadata.Title,
 		IllustrationURL: illustrationURL,
 		IllustrationType: illustrationType,
+		FaviconURL:      faviconURL,
+		FaviconType:     faviconType,
 		HasIndex:        hasIndex,
 		IsCatch:         true,
 		CatchURL:        catchURL,

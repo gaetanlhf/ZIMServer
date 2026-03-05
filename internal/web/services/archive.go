@@ -43,6 +43,8 @@ type Metadata struct {
 	EntryCount       uint32
 	IllustrationURL  string
 	IllustrationType string
+	FaviconURL       string
+	FaviconType      string
 }
 
 type LanguageInfo struct {
@@ -88,10 +90,28 @@ func (s *ArchiveService) LoadZIM(path string) error {
 		Metadata: metadata,
 	}
 
-	faviconService := NewIllustrationService()
-	faviconURL, faviconType := faviconService.GetIllustrationInfo(archive, name)
-	archive.Metadata.IllustrationURL = faviconURL
-	archive.Metadata.IllustrationType = faviconType
+	illustrationService := NewIllustrationService()
+	illustrationURL, illustrationType := illustrationService.GetIllustration(archive, name)
+	
+	faviconService := NewFaviconService()
+	faviconURL, faviconType := faviconService.GetFavicon(archive, name)
+	
+	// If no illustration found, fallback to favicon
+	if illustrationURL == "" {
+		illustrationURL = faviconURL
+		illustrationType = faviconType
+	}
+	
+	// If still nothing, use default
+	if illustrationURL == "" {
+		illustrationURL = "/content/" + name + "/favicon.ico"
+		illustrationType = "image/png"
+	}
+
+	archive.Metadata.IllustrationURL = illustrationURL
+	archive.Metadata.IllustrationType = illustrationType
+	archive.Metadata.FaviconURL = faviconURL
+	archive.Metadata.FaviconType = faviconType
 
 	s.mu.Lock()
 	s.archives[name] = archive
