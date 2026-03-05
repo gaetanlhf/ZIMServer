@@ -24,6 +24,12 @@ func (s *FaviconService) GetFavicon(archive *Archive, archiveName string) (strin
 		{zimreader.NamespaceContent, "favicon.png"},
 		{zimreader.NamespaceWellKnown, "favicon.ico"},
 		{zimreader.NamespaceContent, "favicon.ico"},
+		{zimreader.NamespaceWellKnown, "_res_/favicon"},
+		{zimreader.NamespaceContent, "_res_/favicon"},
+		{zimreader.NamespaceWellKnown, "_res_/favicon.png"},
+		{zimreader.NamespaceContent, "_res_/favicon.png"},
+		{zimreader.NamespaceWellKnown, "_res_/favicon.ico"},
+		{zimreader.NamespaceContent, "_res_/favicon.ico"},
 	}
 
 	for _, fp := range faviconPaths {
