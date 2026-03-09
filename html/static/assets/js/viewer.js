@@ -88,7 +88,6 @@ function init(archive) {
 
     document.addEventListener('click', function(e) {
         const searchResults = document.getElementById('searchResults');
-        const searchInput = document.getElementById('searchInput');
         const searchContainer = document.getElementById('searchContainer');
 
         if (searchContainer && searchResults) {
@@ -98,8 +97,10 @@ function init(archive) {
         }
     });
 
+    let resizeTimeout;
     window.addEventListener('resize', () => {
-        positionSearchResults();
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(positionSearchResults, 100);
     });
 
     const searchInput = document.getElementById('searchInput');
@@ -188,7 +189,7 @@ function positionSearchResults() {
     const searchContainer = document.getElementById('searchContainer');
     const searchResults = document.getElementById('searchResults');
 
-    if (searchContainer && searchResults) {
+    if (searchContainer && searchResults && searchResults.classList.contains('active')) {
         const rect = searchContainer.getBoundingClientRect();
         searchResults.style.top = (rect.bottom + 4) + 'px';
         searchResults.style.left = rect.left + 'px';
@@ -198,68 +199,63 @@ function positionSearchResults() {
 
 function fixIframeURLs(iframeDoc) {
     try {
-        const links = iframeDoc.querySelectorAll('a');
         const currentIframeUrl = iframeDoc.defaultView ? iframeDoc.defaultView.location.href : iframeDoc.URL;
 
-        links.forEach(link => {
-            if (link.classList.contains('error-btn')) {
+        // Use event delegation on the body instead of attaching listeners to every link
+        // This is much faster for pages with thousands of links
+        iframeDoc.body.addEventListener('click', function(e) {
+            const link = e.target.closest('a');
+            if (!link || link.classList.contains('error-btn')) return;
+
+            const hrefAttr = link.getAttribute('href');
+            if (!hrefAttr) return;
+
+            if (hrefAttr.startsWith('http://') || hrefAttr.startsWith('https://')) {
+                e.preventDefault();
+                const encodedUrl = encodeURIComponent(hrefAttr);
+                const newBrowserUrl = '/catch?viewer=' + encodeURIComponent(archiveName) + '&url=' + encodedUrl;
+                history.pushState(null, '', newBrowserUrl);
+                showSpinner();
+                setIframeLocation('/catch?url=' + encodedUrl);
                 return;
             }
 
-            const handleLinkClick = function(e) {
-                const hrefAttr = this.getAttribute('href');
-                if (!hrefAttr) return;
+            if (hrefAttr.startsWith('mailto:')) {
+                if (!link.target || link.target === '_self') {
+                    link.target = '_blank';
+                }
+                return;
+            }
 
-                if (hrefAttr.startsWith('http://') || hrefAttr.startsWith('https://')) {
-                    e.preventDefault();
-                    const encodedUrl = encodeURIComponent(hrefAttr);
+            if (hrefAttr.startsWith('#') || hrefAttr.startsWith('javascript:')) {
+                return;
+            }
+
+            e.preventDefault();
+
+            try {
+                const urlObj = new URL(hrefAttr, currentIframeUrl);
+                
+                if (urlObj.origin === window.location.origin) {
+                    const prefix = '/content/' + archiveName + '/';
+                    if (urlObj.pathname.startsWith(prefix)) {
+                        let relativePath = urlObj.pathname.substring(prefix.length);
+                        relativePath += urlObj.search + urlObj.hash;
+                        loadPage(relativePath);
+                    } else {
+                        window.location.href = urlObj.href;
+                    }
+                } else {
+                    const encodedUrl = encodeURIComponent(urlObj.href);
                     const newBrowserUrl = '/catch?viewer=' + encodeURIComponent(archiveName) + '&url=' + encodedUrl;
                     history.pushState(null, '', newBrowserUrl);
                     showSpinner();
                     setIframeLocation('/catch?url=' + encodedUrl);
-                    return;
                 }
-
-                if (hrefAttr.startsWith('mailto:')) {
-                    if (!this.target || this.target === '_self') {
-                        this.target = '_blank';
-                    }
-                    return;
-                }
-
-                if (hrefAttr.startsWith('#') || hrefAttr.startsWith('javascript:')) {
-                    return;
-                }
-
-                e.preventDefault();
-
-                try {
-                    const urlObj = new URL(hrefAttr, currentIframeUrl);
-                    
-                    if (urlObj.origin === window.location.origin) {
-                        const prefix = '/content/' + archiveName + '/';
-                        if (urlObj.pathname.startsWith(prefix)) {
-                            let relativePath = urlObj.pathname.substring(prefix.length);
-                            relativePath += urlObj.search + urlObj.hash;
-                            loadPage(relativePath);
-                        } else {
-                            window.location.href = urlObj.href;
-                        }
-                    } else {
-                        const encodedUrl = encodeURIComponent(urlObj.href);
-                        const newBrowserUrl = '/catch?viewer=' + encodeURIComponent(archiveName) + '&url=' + encodedUrl;
-                        history.pushState(null, '', newBrowserUrl);
-                        showSpinner();
-                        setIframeLocation('/catch?url=' + encodedUrl);
-                    }
-                } catch (err) {
-                    console.error("Error parsing URL:", err);
-                    loadPage(hrefAttr);
-                }
-            };
-
-            link.removeEventListener('click', handleLinkClick);
-            link.addEventListener('click', handleLinkClick);
+            } catch (err) {
+                console.error("Error parsing URL:", err);
+                loadPage(hrefAttr);
+            }
         });
     } catch(e) {
         console.log('Cannot fix iframe URLs:', e);
@@ -285,9 +281,8 @@ function showSearchResults() {
 
     if (!searchResults || !searchInput) return;
 
-    positionSearchResults();
-
     if (searchInput.value.length >= 2 && lastSearchResults) {
+        positionSearchResults();
         searchResults.classList.add('active');
     }
 }
@@ -392,8 +387,6 @@ function searchArticles(query) {
                     clearBtn.classList.add('visible');
                 }
 
-                positionSearchResults();
-
                 if (data.results && data.results.length > 0) {
                     lastSearchResults = data.results.map(result => {
                         const safePath = result.path.replace(/'/g, "\\'");
@@ -401,11 +394,13 @@ function searchArticles(query) {
                         return `<div class="search-result-item" onclick="loadPage('${safePath}')">${safeTitle}</div>`;
                     }).join('');
                     resultsDiv.innerHTML = lastSearchResults;
+                    positionSearchResults();
                     resultsDiv.classList.add('active');
                 } else {
                     const noResultsText = window.i18n && window.i18n.no_results_found ? window.i18n.no_results_found : 'No results found';
                     lastSearchResults = `<div class="search-result-item no-results">${noResultsText}</div>`;
                     resultsDiv.innerHTML = lastSearchResults;
+                    positionSearchResults();
                     resultsDiv.classList.add('active');
                 }
             })

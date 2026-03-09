@@ -11,85 +11,85 @@ function resetFilters() {
 }
 
 let noResultsTimeout;
+let filterTimeout;
 
 function filterArchives() {
-    const language = document.getElementById('languageFilter').value.toLowerCase();
-    const category = document.getElementById('categoryFilter').value.toLowerCase();
-    const search = document.getElementById('searchBox').value.toLowerCase();
-    const cards = document.querySelectorAll('.archive-card');
-    const clearBtn = document.getElementById('clearSearch');
-    const noResults = document.getElementById('noResults');
+    clearTimeout(filterTimeout);
+    filterTimeout = setTimeout(() => {
+        const language = document.getElementById('languageFilter').value.toLowerCase();
+        const category = document.getElementById('categoryFilter').value.toLowerCase();
+        const search = document.getElementById('searchBox').value.toLowerCase();
+        const cards = document.querySelectorAll('.archive-card');
+        const clearBtn = document.getElementById('clearSearch');
+        const noResults = document.getElementById('noResults');
 
-    localStorage.setItem('zimserver_filter_language', document.getElementById('languageFilter').value);
-    localStorage.setItem('zimserver_filter_category', document.getElementById('categoryFilter').value);
-    localStorage.setItem('zimserver_filter_search', document.getElementById('searchBox').value);
+        localStorage.setItem('zimserver_filter_language', language);
+        localStorage.setItem('zimserver_filter_category', category);
+        localStorage.setItem('zimserver_filter_search', search);
 
-    if (search) {
-        clearBtn.classList.add('visible');
-    } else {
-        clearBtn.classList.remove('visible');
-    }
-
-    let visibleCount = 0;
-
-    cards.forEach(card => {
-        const cardLang = card.dataset.language.toLowerCase();
-        const cardCategory = card.dataset.category.toLowerCase();
-        const cardTags = card.dataset.tags.toLowerCase();
-        const cardTitle = card.dataset.title.toLowerCase();
-        const cardDesc = card.dataset.description.toLowerCase();
-
-        const matchesLanguage = !language || cardLang === language || cardLang === 'mul';
-        const matchesCategory = !category || cardCategory === category;
-        const matchesSearch = !search || cardTitle.includes(search) || cardDesc.includes(search);
-
-        if (matchesLanguage && matchesCategory && matchesSearch) {
-            card.style.display = 'flex';
-            void card.offsetWidth;
-            card.classList.remove('fade-out');
-            visibleCount++;
+        if (search) {
+            clearBtn.classList.add('visible');
         } else {
-            card.classList.add('fade-out');
-            setTimeout(() => {
-                if (card.classList.contains('fade-out')) {
-                    card.style.display = 'none';
-                }
-            }, 300);
+            clearBtn.classList.remove('visible');
         }
-    });
 
-    if (noResultsTimeout) {
-        clearTimeout(noResultsTimeout);
-    }
+        let visibleCount = 0;
 
-    if (visibleCount === 0) {
-        noResultsTimeout = setTimeout(() => {
-            if (noResults) noResults.style.display = '';
-        }, 300);
-    } else {
-        if (noResults) noResults.style.display = 'none';
-    }
+        // Use a single loop and avoid layout thrashing
+        for (let i = 0; i < cards.length; i++) {
+            const card = cards[i];
+            const cardLang = card.dataset.language.toLowerCase();
+            const cardCategory = card.dataset.category.toLowerCase();
+            const cardTitle = card.dataset.title.toLowerCase();
+            const cardDesc = card.dataset.description.toLowerCase();
 
-    const archiveSingular = window.i18n && window.i18n.archive_singular ? window.i18n.archive_singular : 'archive';
-    const archivePlural = window.i18n && window.i18n.archive_plural ? window.i18n.archive_plural : 'archives';
+            const matchesLanguage = !language || cardLang === language || cardLang === 'mul';
+            const matchesCategory = !category || cardCategory === category;
+            const matchesSearch = !search || cardTitle.includes(search) || cardDesc.includes(search);
 
-    let useSingularForZero = false;
-    if (window.i18n && window.i18n.zero_is_singular) {
-        useSingularForZero = window.i18n.zero_is_singular;
-    }
+            if (matchesLanguage && matchesCategory && matchesSearch) {
+                card.style.display = 'flex';
+                card.classList.remove('fade-out');
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+                card.classList.add('fade-out');
+            }
+        }
 
-    let pluralText;
-    if (visibleCount === 0) {
-        pluralText = useSingularForZero ? archiveSingular : archivePlural;
-    } else if (visibleCount === 1) {
-        pluralText = archiveSingular;
-    } else {
-        pluralText = archivePlural;
-    }
+        if (noResultsTimeout) {
+            clearTimeout(noResultsTimeout);
+        }
 
-    document.getElementById('archiveCount').textContent = visibleCount + ' ' + pluralText;
-    
-    setTimeout(updateAllScrollIndicators, 100);
+        if (visibleCount === 0) {
+            noResultsTimeout = setTimeout(() => {
+                if (noResults) noResults.style.display = '';
+            }, 100);
+        } else {
+            if (noResults) noResults.style.display = 'none';
+        }
+
+        const archiveSingular = window.i18n && window.i18n.archive_singular ? window.i18n.archive_singular : 'archive';
+        const archivePlural = window.i18n && window.i18n.archive_plural ? window.i18n.archive_plural : 'archives';
+
+        let useSingularForZero = false;
+        if (window.i18n && window.i18n.zero_is_singular) {
+            useSingularForZero = window.i18n.zero_is_singular;
+        }
+
+        let pluralText;
+        if (visibleCount === 0) {
+            pluralText = useSingularForZero ? archiveSingular : archivePlural;
+        } else if (visibleCount === 1) {
+            pluralText = archiveSingular;
+        } else {
+            pluralText = archivePlural;
+        }
+
+        document.getElementById('archiveCount').textContent = visibleCount + ' ' + pluralText;
+        
+        requestAnimationFrame(updateAllScrollIndicators);
+    }, 150);
 }
 
 function updateScrollIndicators() {
@@ -133,7 +133,10 @@ function updateFooterScroll(footer) {
 
 function updateAllScrollIndicators() {
     updateScrollIndicators();
-    document.querySelectorAll('.archive-footer').forEach(updateFooterScroll);
+    const footers = document.querySelectorAll('.archive-footer');
+    for (let i = 0; i < footers.length; i++) {
+        updateFooterScroll(footers[i]);
+    }
 }
 
 let currentArchives = '';
@@ -141,13 +144,13 @@ let currentArchives = '';
 function getDisplayedArchives() {
     const cards = document.querySelectorAll('.archive-card');
     const names = [];
-    cards.forEach(card => {
-        const href = card.getAttribute('href');
+    for (let i = 0; i < cards.length; i++) {
+        const href = cards[i].getAttribute('href');
         const match = href.match(/\/viewer\/([^\/]+)\//);
         if (match) {
             names.push(match[1]);
         }
-    });
+    }
     return names.sort().join(',');
 }
 
@@ -201,17 +204,18 @@ function setupSelectArrows() {
     const selects = document.querySelectorAll('select');
     
     document.addEventListener('click', (e) => {
-        selects.forEach(select => {
-            const wrapper = select.parentElement;
+        for (let i = 0; i < selects.length; i++) {
+            const wrapper = selects[i].parentElement;
             if (wrapper.classList.contains('select-wrapper')) {
                 if (!wrapper.contains(e.target)) {
                     wrapper.classList.remove('active');
                 }
             }
-        });
+        }
     });
 
-    selects.forEach(select => {
+    for (let i = 0; i < selects.length; i++) {
+        const select = selects[i];
         const wrapper = select.parentElement;
         if (wrapper.classList.contains('select-wrapper')) {
             let justFocused = false;
@@ -255,7 +259,7 @@ function setupSelectArrows() {
                 setTimeout(() => justChanged = false, 200);
             });
         }
-    });
+    }
 }
 
 function setupSettingsModal() {
@@ -372,23 +376,23 @@ function applyTheme(theme) {
 
 function setupImageLoading() {
     const images = document.querySelectorAll('.archive-icon img');
-    images.forEach(img => {
+    for (let i = 0; i < images.length; i++) {
+        const img = images[i];
         const container = img.parentElement;
-        container.classList.add('loading');
         
         if (img.complete) {
             img.classList.add('loaded');
-            container.classList.remove('loading');
         } else {
+            container.classList.add('loading');
             img.addEventListener('load', () => {
                 img.classList.add('loaded');
                 container.classList.remove('loading');
-            });
+            }, { once: true });
             img.addEventListener('error', () => {
                 container.classList.remove('loading');
-            });
+            }, { once: true });
         }
-    });
+    }
 }
 
 function showToast(message, type = 'info', duration = 3000) {
@@ -429,7 +433,7 @@ function hideToast(toast) {
     toast.classList.add('fade-out');
     setTimeout(() => {
         toast.remove();
-    }, 300);
+    }, 200);
 }
 
 function checkPendingToast() {
@@ -499,7 +503,7 @@ function hideTooltip() {
         tooltip.classList.remove('show');
         setTimeout(() => {
             tooltip.remove();
-        }, 200);
+        }, 150);
     }
 }
 
@@ -510,7 +514,7 @@ function attachTooltipEvents(element, text) {
         clearTimeout(hoverTimeout);
         hoverTimeout = setTimeout(() => {
             showTooltip(element, text);
-        }, 100);
+        }, 200);
     });
     
     element.addEventListener('mouseleave', () => {
@@ -536,19 +540,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const filters = document.querySelector('.filters');
 
-    setTimeout(updateAllScrollIndicators, 100);
-
     if (filters) {
-        filters.addEventListener('scroll', updateScrollIndicators);
+        let scrollTimeout;
+        filters.addEventListener('scroll', () => {
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(updateScrollIndicators, 50);
+        }, { passive: true });
     }
 
-    document.querySelectorAll('.archive-footer').forEach(footer => {
-        footer.addEventListener('scroll', () => updateFooterScroll(footer));
+    const footers = document.querySelectorAll('.archive-footer');
+    for (let i = 0; i < footers.length; i++) {
+        const footer = footers[i];
+        footer.addEventListener('scroll', () => updateFooterScroll(footer), { passive: true });
         updateFooterScroll(footer);
-    });
+    }
 
+    let resizeTimeout;
     window.addEventListener('resize', () => {
-        setTimeout(updateAllScrollIndicators, 100);
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(updateAllScrollIndicators, 100);
     });
 
     currentArchives = getDisplayedArchives();
