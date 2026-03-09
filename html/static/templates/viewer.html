@@ -54,9 +54,9 @@
 
     <div class="iframe-container">
         {{if .IsCatch}}
-        <iframe id="contentFrame" src="{{.CatchSrc}}"></iframe>
+        <iframe id="contentFrame" src="{{.CatchSrc}}" style="background-color: #ffffff;"></iframe>
         {{else}}
-        <iframe id="contentFrame" src="/content/{{.ArchiveName}}/{{.EntryPath}}"></iframe>
+        <iframe id="contentFrame" src="/content/{{.ArchiveName}}/{{.EntryPath}}" style="background-color: #ffffff;"></iframe>
         {{end}}
     </div>
 

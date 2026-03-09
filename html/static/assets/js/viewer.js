@@ -201,8 +201,6 @@ function fixIframeURLs(iframeDoc) {
     try {
         const currentIframeUrl = iframeDoc.defaultView ? iframeDoc.defaultView.location.href : iframeDoc.URL;
 
-        // Use event delegation on the body instead of attaching listeners to every link
-        // This is much faster for pages with thousands of links
         iframeDoc.body.addEventListener('click', function(e) {
             const link = e.target.closest('a');
             if (!link || link.classList.contains('error-btn')) return;
@@ -482,6 +480,7 @@ function applyDarkModeToIframe(iframeDoc) {
     const theme = localStorage.getItem('zimserver_theme') || 'auto';
     const isDark = theme === 'dark' || (theme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
+    const iframe = document.getElementById('contentFrame');
     const styleId = 'zimserver-dark-mode-style';
     let style = iframeDoc.getElementById(styleId);
 
@@ -525,6 +524,7 @@ function applyDarkModeToIframe(iframeDoc) {
                 style.textContent = `
                     html {
                         filter: invert(1) hue-rotate(180deg) !important;
+                        background-color: #ffffff !important;
                     }
                     img, video, iframe, canvas, svg {
                         filter: invert(1) hue-rotate(180deg) !important;
@@ -532,12 +532,13 @@ function applyDarkModeToIframe(iframeDoc) {
                 `;
                 iframeDoc.head.appendChild(style);
             }
-        } else if (style) {
-            style.remove();
+            if (iframe) iframe.style.backgroundColor = '#000000';
+        } else {
+            if (style) style.remove();
+            if (iframe) iframe.style.backgroundColor = 'transparent';
         }
     } else {
-        if (style) {
-            style.remove();
-        }
+        if (style) style.remove();
+        if (iframe) iframe.style.backgroundColor = '#ffffff';
     }
 }
