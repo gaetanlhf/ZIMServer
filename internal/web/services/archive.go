@@ -53,13 +53,17 @@ type LanguageInfo struct {
 }
 
 type ArchiveService struct {
-	archives map[string]*Archive
-	mu       sync.RWMutex
+	archives            map[string]*Archive
+	mu                  sync.RWMutex
+	illustrationService *IllustrationService
+	faviconService      *FaviconService
 }
 
-func NewArchiveService() *ArchiveService {
+func NewArchiveService(illustrationService *IllustrationService, faviconService *FaviconService) *ArchiveService {
 	return &ArchiveService{
-		archives: make(map[string]*Archive),
+		archives:            make(map[string]*Archive),
+		illustrationService: illustrationService,
+		faviconService:      faviconService,
 	}
 }
 
@@ -90,11 +94,8 @@ func (s *ArchiveService) LoadZIM(path string) error {
 		Metadata: metadata,
 	}
 
-	illustrationService := NewIllustrationService()
-	illustrationURL, illustrationType := illustrationService.GetIllustration(archive, name)
-	
-	faviconService := NewFaviconService()
-	faviconURL, faviconType := faviconService.GetFavicon(archive, name)
+	illustrationURL, illustrationType := s.illustrationService.GetIllustration(archive, name)
+	faviconURL, faviconType := s.faviconService.GetFavicon(archive, name)
 	
 	// If no illustration found, fallback to favicon
 	if illustrationURL == "" {

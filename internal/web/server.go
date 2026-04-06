@@ -35,9 +35,9 @@ func NewServer(version string) (*Server, error) {
 		return nil, fmt.Errorf("failed to load templates: %w", err)
 	}
 
-	archiveService := services.NewArchiveService()
 	illustrationService := services.NewIllustrationService()
 	faviconService := services.NewFaviconService()
+	archiveService := services.NewArchiveService(illustrationService, faviconService)
 	searchService := services.NewSearchService()
 
 	homeHandler := &handlers.HomeHandler{
