@@ -115,8 +115,8 @@ func (s *ArchiveService) LoadZIM(path string) error {
 	archive.Metadata.FaviconType = faviconType
 
 	s.mu.Lock()
+	defer s.mu.Unlock()
 	s.archives[name] = archive
-	s.mu.Unlock()
 
 	return nil
 }
