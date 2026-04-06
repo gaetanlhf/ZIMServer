@@ -160,7 +160,6 @@ func (h *ContentHandler) handleIllustration(w http.ResponseWriter, r *http.Reque
 }
 
 func (h *ContentHandler) handle404(w http.ResponseWriter, r *http.Request, archiveName string, resourcePath string) {
-	w.WriteHeader(http.StatusNotFound)
 	lang := h.I18n.GetLanguage(r)
 
 	data := struct {
@@ -186,6 +185,7 @@ func (h *ContentHandler) handle404(w http.ResponseWriter, r *http.Request, archi
 	}
 
 	w.Header().Set("Content-Language", lang)
+	w.WriteHeader(http.StatusNotFound)
 	if err := h.Templates.Render(w, "404", data); err != nil {
 		log.Printf("Template error: %v", err)
 	}
