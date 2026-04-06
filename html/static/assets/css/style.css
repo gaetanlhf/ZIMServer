@@ -653,6 +653,21 @@ select {
     display: none;
 }
 
+.archive-footer:not(.no-scroll) {
+    -webkit-mask-image: linear-gradient(to right, transparent, black 1.5rem, black calc(100% - 1.5rem), transparent);
+    mask-image: linear-gradient(to right, transparent, black 1.5rem, black calc(100% - 1.5rem), transparent);
+}
+
+.archive-footer.no-scroll-left {
+    -webkit-mask-image: linear-gradient(to right, black, black calc(100% - 1.5rem), transparent);
+    mask-image: linear-gradient(to right, black, black calc(100% - 1.5rem), transparent);
+}
+
+.archive-footer.no-scroll-right {
+    -webkit-mask-image: linear-gradient(to right, transparent, black 1.5rem, black);
+    mask-image: linear-gradient(to right, transparent, black 1.5rem, black);
+}
+
 .footer-item {
     display: flex;
     align-items: center;
