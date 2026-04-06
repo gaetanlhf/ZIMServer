@@ -57,7 +57,8 @@ func (h *ContentHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		resolvedPage, err := archive.Reader.ResolveRedirect(mainPage)
 		if err != nil {
-			http.Error(w, "Failed to resolve main page", http.StatusInternalServerError)
+			log.Printf("Failed to resolve main page for %s: %v", archiveName, err)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
 
@@ -85,8 +86,8 @@ func (h *ContentHandler) handleResource(w http.ResponseWriter, r *http.Request, 
 	if entry.IsRedirect() {
 		resolvedEntry, err := archive.Reader.ResolveRedirect(entry)
 		if err != nil {
-			http.Error(w, "Failed to resolve redirect", http.StatusInternalServerError)
 			log.Printf("Redirect resolution error for %s: %v", resourcePath, err)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
 
