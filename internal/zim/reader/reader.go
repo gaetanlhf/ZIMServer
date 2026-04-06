@@ -132,7 +132,10 @@ func (zr *ZIMReader) resolveRedirectWithDepth(entry DirectoryEntry, depth, maxDe
 		return entry, nil
 	}
 
-	redirectEntry := entry.(*RedirectEntry)
+	redirectEntry, ok := entry.(*RedirectEntry)
+	if !ok {
+		return nil, fmt.Errorf("entry is marked as redirect but has unexpected type")
+	}
 
 	if redirectEntry.RedirectIndex == 0xffffffff {
 		return nil, fmt.Errorf("invalid redirect index: 0xffffffff")
@@ -152,7 +155,10 @@ func (zr *ZIMReader) GetContent(entry DirectoryEntry) ([]byte, error) {
 		return nil, err
 	}
 
-	contentEntry := resolvedEntry.(*ContentEntry)
+	contentEntry, ok := resolvedEntry.(*ContentEntry)
+	if !ok {
+		return nil, fmt.Errorf("resolved entry has unexpected type")
+	}
 	cluster, err := zr.getCluster(contentEntry.ClusterNumber)
 	if err != nil {
 		return nil, err
@@ -167,7 +173,10 @@ func (zr *ZIMReader) GetContentReader(entry DirectoryEntry) (io.ReaderAt, int64,
 		return nil, 0, err
 	}
 
-	contentEntry := resolvedEntry.(*ContentEntry)
+	contentEntry, ok := resolvedEntry.(*ContentEntry)
+	if !ok {
+		return nil, 0, fmt.Errorf("resolved entry has unexpected type")
+	}
 	cluster, err := zr.getCluster(contentEntry.ClusterNumber)
 	if err != nil {
 		return nil, 0, err
@@ -182,7 +191,10 @@ func (zr *ZIMReader) GetMimeType(entry DirectoryEntry) (string, error) {
 		return "", err
 	}
 
-	contentEntry := resolvedEntry.(*ContentEntry)
+	contentEntry, ok := resolvedEntry.(*ContentEntry)
+	if !ok {
+		return "", fmt.Errorf("resolved entry has unexpected type")
+	}
 	if contentEntry.MimeType >= uint16(len(zr.mimeTypes)) {
 		return "", fmt.Errorf("invalid mime type index: %d", contentEntry.MimeType)
 	}
