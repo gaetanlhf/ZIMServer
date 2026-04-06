@@ -15,7 +15,13 @@ func NewReader(filename string) (*ZIMReader, error) {
 		return nil, fmt.Errorf("failed to open file: %w", err)
 	}
 
-	return NewReaderFromReaderAt(file)
+	zr, err := NewReaderFromReaderAt(file)
+	if err != nil {
+		file.Close()
+		return nil, err
+	}
+
+	return zr, nil
 }
 
 func NewReaderFromReaderAt(r io.ReaderAt) (*ZIMReader, error) {
