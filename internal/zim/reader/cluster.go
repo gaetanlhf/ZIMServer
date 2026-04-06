@@ -135,6 +135,11 @@ func (c *Cluster) readUncompressedData() ([]byte, error) {
 	c.Compression = CompressionType(clusterInfo[0] & 0x0F)
 	c.Extended = (clusterInfo[0] & 0x10) != 0
 
+	const maxClusterSize = 1 << 30 // 1 GB
+	if c.size == 0 || c.size > maxClusterSize {
+		return nil, fmt.Errorf("invalid cluster size: %d", c.size)
+	}
+
 	compressedData := make([]byte, c.size-1)
 	n, err := c.reader.ReadAt(compressedData, int64(c.offset+1))
 	if err != nil && err != io.EOF {
