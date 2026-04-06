@@ -136,9 +136,11 @@ func (c *Cluster) readUncompressedData() ([]byte, error) {
 	c.Extended = (clusterInfo[0] & 0x10) != 0
 
 	compressedData := make([]byte, c.size-1)
-	if _, err := c.reader.ReadAt(compressedData, int64(c.offset+1)); err != nil {
+	n, err := c.reader.ReadAt(compressedData, int64(c.offset+1))
+	if err != nil && err != io.EOF {
 		return nil, fmt.Errorf("failed to read cluster data: %w", err)
 	}
+	compressedData = compressedData[:n]
 
 	switch c.Compression {
 	case CompressionNone, CompressionType(0):
