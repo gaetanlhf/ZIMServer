@@ -564,11 +564,4 @@ document.addEventListener('DOMContentLoaded', function() {
     currentArchives = getDisplayedArchives();
     setInterval(checkUpdates, 5000);
 
-    const updateBtn = document.getElementById('updateBtn');
-    if (updateBtn) {
-        const tooltipText = window.i18n && window.i18n.home && window.i18n.home.check_for_updates 
-            ? window.i18n.home.check_for_updates 
-            : 'Check for updates';
-        attachTooltipEvents(updateBtn, tooltipText);
-    }
 });
