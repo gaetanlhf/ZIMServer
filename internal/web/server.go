@@ -21,6 +21,7 @@ type Server struct {
 	viewerHandler       *handlers.ViewerHandler
 	contentHandler      *handlers.ContentHandler
 	apiHandler          *handlers.APIHandler
+	assetsHandler       http.Handler
 	i18n                *i18n.I18n
 }
 
@@ -77,6 +78,7 @@ func NewServer(version string) (*Server, error) {
 		viewerHandler:       viewerHandler,
 		contentHandler:      contentHandler,
 		apiHandler:          apiHandler,
+		assetsHandler:       http.StripPrefix("/assets/", http.FileServer(templates.GetAssetsFS())),
 		i18n:                i18n,
 	}, nil
 }
@@ -104,7 +106,7 @@ func (s *Server) serveHTTP(w http.ResponseWriter, r *http.Request) {
 	case path == "/":
 		s.homeHandler.ServeHTTP(w, r)
 	case strings.HasPrefix(path, "/assets/"):
-		http.StripPrefix("/assets/", http.FileServer(templates.GetAssetsFS())).ServeHTTP(w, r)
+		s.assetsHandler.ServeHTTP(w, r)
 	case strings.HasPrefix(path, "/viewer/"):
 		s.viewerHandler.ServeHTTP(w, r)
 	case strings.HasPrefix(path, "/content/"):
