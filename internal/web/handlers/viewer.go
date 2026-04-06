@@ -87,12 +87,13 @@ func (h *ViewerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	entryPath := parts[1]
 
+	faviconURL, faviconType := h.FaviconService.GetFavicon(archive, archiveName)
+
 	illustrationURL, illustrationType := h.IllustrationService.GetIllustration(archive, archiveName)
 	if illustrationURL == "" {
-		illustrationURL, illustrationType = h.FaviconService.GetFavicon(archive, archiveName)
+		illustrationURL = faviconURL
+		illustrationType = faviconType
 	}
-	
-	faviconURL, faviconType := h.FaviconService.GetFavicon(archive, archiveName)
 
 	hasIndex := archive.IndexMgr != nil
 	lang := h.I18n.GetLanguage(r)
@@ -148,12 +149,14 @@ func (h *ViewerHandler) handleCatch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	faviconURL, faviconType := h.FaviconService.GetFavicon(archive, viewer)
+
 	illustrationURL, illustrationType := h.IllustrationService.GetIllustration(archive, viewer)
 	if illustrationURL == "" {
-		illustrationURL, illustrationType = h.FaviconService.GetFavicon(archive, viewer)
+		illustrationURL = faviconURL
+		illustrationType = faviconType
 	}
-	faviconURL, faviconType := h.FaviconService.GetFavicon(archive, viewer)
-	
+
 	hasIndex := archive.IndexMgr != nil
 
 	data := ViewerData{
