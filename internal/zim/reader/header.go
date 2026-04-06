@@ -39,23 +39,30 @@ func readHeader(r io.ReaderAt) (*Header, error) {
 	return h, nil
 }
 
+const maxMimeTypes = 1024
+
 func readMimeTypes(r io.ReaderAt, pos uint64) ([]string, error) {
 	var mimeTypes []string
 	offset := pos
-	buf := make([]byte, 256)
+	buf := make([]byte, 512)
 
-	for {
-		if _, err := r.ReadAt(buf, int64(offset)); err != nil {
+	for len(mimeTypes) < maxMimeTypes {
+		n, err := r.ReadAt(buf, int64(offset))
+		if err != nil && n == 0 {
 			return nil, fmt.Errorf("failed to read mime type: %w", err)
 		}
 
 		end := 0
-		for end < len(buf) && buf[end] != 0 {
+		for end < n && buf[end] != 0 {
 			end++
 		}
 
 		if end == 0 {
 			break
+		}
+
+		if end == n {
+			return nil, fmt.Errorf("mime type too long or not null-terminated at offset %d", offset)
 		}
 
 		mimeTypes = append(mimeTypes, string(buf[:end]))
