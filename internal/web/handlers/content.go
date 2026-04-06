@@ -73,6 +73,10 @@ func (h *ContentHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resourcePath := parts[1]
+	if strings.Contains(resourcePath, "..") {
+		h.handle404(w, r, archiveName, resourcePath)
+		return
+	}
 	h.handleResource(w, r, archive, resourcePath)
 }
 
