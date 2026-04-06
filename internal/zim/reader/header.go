@@ -66,42 +66,48 @@ func readMimeTypes(r io.ReaderAt, pos uint64) ([]string, error) {
 }
 
 func readPathPointers(r io.ReaderAt, pos uint64, count uint32) ([]uint64, error) {
-	buf := make([]byte, count*8)
+	size := uint64(count) * 8
+	buf := make([]byte, size)
 	if _, err := r.ReadAt(buf, int64(pos)); err != nil {
 		return nil, fmt.Errorf("failed to read path pointers: %w", err)
 	}
 
 	pointers := make([]uint64, count)
 	for i := uint32(0); i < count; i++ {
-		pointers[i] = binary.LittleEndian.Uint64(buf[i*8 : (i+1)*8])
+		off := uint64(i) * 8
+		pointers[i] = binary.LittleEndian.Uint64(buf[off : off+8])
 	}
 
 	return pointers, nil
 }
 
 func readTitlePointers(r io.ReaderAt, pos uint64, count uint32) ([]uint32, error) {
-	buf := make([]byte, count*4)
+	size := uint64(count) * 4
+	buf := make([]byte, size)
 	if _, err := r.ReadAt(buf, int64(pos)); err != nil {
 		return nil, fmt.Errorf("failed to read title pointers: %w", err)
 	}
 
 	pointers := make([]uint32, count)
 	for i := uint32(0); i < count; i++ {
-		pointers[i] = binary.LittleEndian.Uint32(buf[i*4 : (i+1)*4])
+		off := uint64(i) * 4
+		pointers[i] = binary.LittleEndian.Uint32(buf[off : off+4])
 	}
 
 	return pointers, nil
 }
 
 func readClusterPointers(r io.ReaderAt, pos uint64, count uint32) ([]uint64, error) {
-	buf := make([]byte, count*8)
+	size := uint64(count) * 8
+	buf := make([]byte, size)
 	if _, err := r.ReadAt(buf, int64(pos)); err != nil {
 		return nil, fmt.Errorf("failed to read cluster pointers: %w", err)
 	}
 
 	pointers := make([]uint64, count)
 	for i := uint32(0); i < count; i++ {
-		pointers[i] = binary.LittleEndian.Uint64(buf[i*8 : (i+1)*8])
+		off := uint64(i) * 8
+		pointers[i] = binary.LittleEndian.Uint64(buf[off : off+8])
 	}
 
 	return pointers, nil
