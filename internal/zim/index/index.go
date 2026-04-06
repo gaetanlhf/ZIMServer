@@ -110,12 +110,11 @@ func (idx *Index) SearchByTitle(titlePrefix string, maxResults int) ([]SearchRes
 
 			title := strings.ToLower(entry.GetTitle())
 			if !strings.HasPrefix(title, titlePrefix) {
-				if title > titlePrefix && !strings.HasPrefix(title, titlePrefix) {
+				if title > titlePrefix {
+					sortResultsByScore(results)
 					return results, nil
 				}
-				if !strings.HasPrefix(title, titlePrefix) {
-					goto Done
-				}
+				continue
 			}
 
 			resolvedEntry, err := idx.reader.ResolveRedirect(entry)
@@ -137,7 +136,6 @@ func (idx *Index) SearchByTitle(titlePrefix string, maxResults int) ([]SearchRes
 		i += toRead
 	}
 
-Done:
 	sortResultsByScore(results)
 
 	return results, nil
