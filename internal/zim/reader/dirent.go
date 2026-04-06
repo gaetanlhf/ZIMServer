@@ -71,12 +71,17 @@ func readRedirectEntry(buf []byte, namespace byte) (*RedirectEntry, error) {
 	for pathEnd < len(buf) && buf[pathEnd] != 0 {
 		pathEnd++
 	}
+	if pathEnd >= len(buf) {
+		return nil, fmt.Errorf("redirect entry path not null-terminated")
+	}
 	entry.Path = string(buf[pathStart:pathEnd])
 
 	titleStart := pathEnd + 1
 	titleEnd := titleStart
-	for titleEnd < len(buf) && buf[titleEnd] != 0 {
-		titleEnd++
+	if titleStart < len(buf) {
+		for titleEnd < len(buf) && buf[titleEnd] != 0 {
+			titleEnd++
+		}
 	}
 	title := string(buf[titleStart:titleEnd])
 
