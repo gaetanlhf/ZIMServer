@@ -6,7 +6,6 @@ import (
 	"io"
 	"os"
 	"sort"
-	"strings"
 )
 
 func NewReader(filename string) (*ZIMReader, error) {
@@ -231,10 +230,24 @@ func (zr *ZIMReader) getCluster(index uint32) (*Cluster, error) {
 }
 
 func (zr *ZIMReader) ListEntriesByNamespace(namespace byte) ([]DirectoryEntry, error) {
-	var entries []DirectoryEntry
+	count := int(zr.header.EntryCount)
 	prefix := string(namespace)
-	
-	for i := 0; i < int(zr.header.EntryCount); i++ {
+
+	start := sort.Search(count, func(i int) bool {
+		ptr, err := zr.readPathPointer(i)
+		if err != nil {
+			return false
+		}
+		entry, err := readDirectoryEntry(zr.file, ptr)
+		if err != nil {
+			return false
+		}
+		fullPath := string(entry.GetNamespace()) + entry.GetPath()
+		return fullPath >= prefix
+	})
+
+	var entries []DirectoryEntry
+	for i := start; i < count; i++ {
 		ptr, err := zr.readPathPointer(i)
 		if err != nil {
 			continue
@@ -245,10 +258,11 @@ func (zr *ZIMReader) ListEntriesByNamespace(namespace byte) ([]DirectoryEntry, e
 			continue
 		}
 
-		fullPath := string(entry.GetNamespace()) + entry.GetPath()
-		if strings.HasPrefix(fullPath, prefix) {
-			entries = append(entries, entry)
+		if entry.GetNamespace() != namespace {
+			break
 		}
+
+		entries = append(entries, entry)
 	}
 
 	return entries, nil
