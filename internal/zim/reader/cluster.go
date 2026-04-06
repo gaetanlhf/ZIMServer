@@ -21,6 +21,10 @@ func (c *Cluster) ReadBlob(blobIndex uint32) ([]byte, error) {
 		offsetSize = 8
 	}
 
+	if len(data) < 1+offsetSize {
+		return nil, fmt.Errorf("cluster data too short to read first offset: len=%d, need=%d", len(data), 1+offsetSize)
+	}
+
 	firstOffsetBytes := data[1 : 1+offsetSize]
 	var firstOffset uint64
 	if c.Extended {
@@ -36,6 +40,11 @@ func (c *Cluster) ReadBlob(blobIndex uint32) ([]byte, error) {
 	}
 
 	offsetPos := 1 + (blobIndex * uint32(offsetSize))
+	endPos := offsetPos + uint32(offsetSize)*2
+	if int(endPos) > len(data) {
+		return nil, fmt.Errorf("cluster data too short to read blob offsets: len=%d, need=%d", len(data), endPos)
+	}
+
 	var startOffset, endOffset uint64
 
 	if c.Extended {
