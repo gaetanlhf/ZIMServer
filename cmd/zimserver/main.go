@@ -139,10 +139,12 @@ func runServer(host, port string, paths []string) {
 		}
 	}()
 
+	watchDone := make(chan struct{})
+
 	go func() {
 		loadZimFiles(server, paths)
 		printLoadedArchives(server, host, port)
-		go watchFiles(server, paths)
+		go watchFiles(server, paths, watchDone)
 	}()
 
 	quit := make(chan os.Signal, 1)
@@ -150,6 +152,8 @@ func runServer(host, port string, paths []string) {
 	<-quit
 
 	logInfo("Shutting down...")
+
+	close(watchDone)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -310,7 +314,7 @@ type fileState struct {
 	stable  bool
 }
 
-func watchFiles(server *web.Server, paths []string) {
+func watchFiles(server *web.Server, paths []string, done <-chan struct{}) {
 	ticker := time.NewTicker(2 * time.Second)
 	defer ticker.Stop()
 
@@ -333,7 +337,12 @@ func watchFiles(server *web.Server, paths []string) {
 		}
 	}
 
-	for range ticker.C {
+	for {
+		select {
+		case <-done:
+			return
+		case <-ticker.C:
+		}
 		currentFiles := collectZimFiles(paths)
 		currentMap := make(map[string]bool)
 
