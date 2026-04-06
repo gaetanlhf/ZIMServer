@@ -2,6 +2,7 @@ package templates
 
 import (
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"io/fs"
 	"net/http"
@@ -33,9 +34,12 @@ func Load(i18n *i18n.I18n) (*Templates, error) {
 			}
 			return val
 		},
-		"json": func(v interface{}) template.JS {
-			a, _ := json.Marshal(v)
-			return template.JS(a)
+		"json": func(v interface{}) (template.JS, error) {
+			a, err := json.Marshal(v)
+			if err != nil {
+				return "", fmt.Errorf("json marshal error: %w", err)
+			}
+			return template.JS(a), nil
 		},
 	}
 
