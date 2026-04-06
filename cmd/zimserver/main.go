@@ -1,14 +1,17 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/gaetanlhf/ZIMServer/internal/web"
@@ -142,7 +145,24 @@ func runServer(host, port string, paths []string) {
 		go watchFiles(server, paths)
 	}()
 
-	select {}
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	logInfo("Shutting down...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := httpServer.Shutdown(ctx); err != nil {
+		logError("Server shutdown error: %v", err)
+	}
+
+	for _, archive := range server.ListArchives() {
+		archive.Reader.Close()
+	}
+
+	logSuccess("Server stopped")
 }
 
 func waitForStableFiles(zimFiles []string) []string {
