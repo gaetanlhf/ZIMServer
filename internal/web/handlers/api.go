@@ -82,7 +82,9 @@ func (h *APIHandler) handleStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Failed to encode status response: %v", err)
+	}
 }
 
 func (h *APIHandler) handleSearch(w http.ResponseWriter, r *http.Request, archive *services.Archive) {
@@ -129,7 +131,9 @@ func (h *APIHandler) handleSearch(w http.ResponseWriter, r *http.Request, archiv
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Failed to encode search response: %v", err)
+	}
 }
 
 func (h *APIHandler) handleRandom(w http.ResponseWriter, r *http.Request, archive *services.Archive) {
@@ -152,5 +156,7 @@ func (h *APIHandler) handleRandom(w http.ResponseWriter, r *http.Request, archiv
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Failed to encode random response: %v", err)
+	}
 }

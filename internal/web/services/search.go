@@ -84,7 +84,9 @@ func (s *SearchService) HandleSearch(w http.ResponseWriter, r *http.Request, arc
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Failed to encode search response: %v", err)
+	}
 
 	log.Printf("Search [%s]: '%s' -> %d results in %s", archive.Name, query, len(results), elapsed)
 }
