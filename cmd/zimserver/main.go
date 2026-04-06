@@ -355,9 +355,26 @@ func watchFiles(server *web.Server, paths []string) {
 				continue
 			}
 
-			if !state.stable {
+			if state.stable {
+				if state.size != info.Size() || !state.modTime.Equal(info.ModTime()) {
+					state.stable = false
+					state.size = info.Size()
+					state.modTime = info.ModTime()
+					logInfo("File changed: %s%s%s", colorCyan, filepath.Base(f), colorReset)
+				}
+			} else {
 				if state.size == info.Size() && state.modTime.Equal(info.ModTime()) {
 					state.stable = true
+
+					if loadedFiles[f] {
+						baseName := filepath.Base(f)
+						name := strings.TrimSuffix(baseName, filepath.Ext(baseName))
+						if err := server.UnloadZIM(name); err != nil {
+							logWarning("Failed to unload %s%s%s: %v", colorCyan, name, colorReset, err)
+						}
+						delete(loadedFiles, f)
+					}
+
 					if err := server.LoadZIM(f); err != nil {
 						logWarning("Failed to load %s%s%s: %v", colorCyan, filepath.Base(f), colorReset, err)
 					} else {
