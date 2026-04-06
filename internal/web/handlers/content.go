@@ -121,7 +121,13 @@ func (h *ContentHandler) handleResource(w http.ResponseWriter, r *http.Request, 
 		w.Header().Set("Content-Type", mimeType)
 	}
 
-	http.ServeContent(w, r, filepath.Base(resourcePath), timeZero, file.(http.File))
+	httpFile, ok := file.(http.File)
+	if !ok {
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		log.Printf("File does not implement http.File for resource %s", resourcePath)
+		return
+	}
+	http.ServeContent(w, r, filepath.Base(resourcePath), timeZero, httpFile)
 }
 
 func (h *ContentHandler) handleIllustration(w http.ResponseWriter, r *http.Request, archive *services.Archive, archiveName string) {
