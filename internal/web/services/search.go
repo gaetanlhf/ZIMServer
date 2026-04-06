@@ -60,7 +60,8 @@ func (s *SearchService) HandleSearch(w http.ResponseWriter, r *http.Request, arc
 	elapsed := time.Since(start)
 
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Search failed: %v", err), http.StatusInternalServerError)
+		log.Printf("Search error for archive %s: %v", archive.Name, err)
+		http.Error(w, "Search failed", http.StatusInternalServerError)
 		return
 	}
 

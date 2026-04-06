@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -113,7 +112,7 @@ func (h *APIHandler) handleSearch(w http.ResponseWriter, r *http.Request, archiv
 	results, err := archive.IndexMgr.Search(query, limit)
 	if err != nil {
 		log.Printf("Search error: %v", err)
-		http.Error(w, fmt.Sprintf("Search failed: %v", err), http.StatusInternalServerError)
+		http.Error(w, "Search failed", http.StatusInternalServerError)
 		return
 	}
 
@@ -146,7 +145,7 @@ func (h *APIHandler) handleRandom(w http.ResponseWriter, r *http.Request, archiv
 	entry, err := archive.IndexMgr.GetRandomArticle()
 	if err != nil {
 		log.Printf("Random error for archive %s: %v", archive.Name, err)
-		http.Error(w, fmt.Sprintf("Random failed: %v", err), http.StatusInternalServerError)
+		http.Error(w, "Random failed", http.StatusInternalServerError)
 		return
 	}
 
