@@ -283,7 +283,7 @@ func (zr *ZIMReader) GetMetadata(key string) (string, error) {
 }
 
 func (zr *ZIMReader) readPathPointer(index int) (uint64, error) {
-	offset := int64(zr.header.PathPtrPos) + int64(index*8)
+	offset := int64(zr.header.PathPtrPos) + int64(index)*8
 	buf := make([]byte, 8)
 	if _, err := zr.file.ReadAt(buf, offset); err != nil {
 		return 0, fmt.Errorf("failed to read path pointer at index %d: %w", index, err)
@@ -292,7 +292,7 @@ func (zr *ZIMReader) readPathPointer(index int) (uint64, error) {
 }
 
 func (zr *ZIMReader) readClusterPointer(index int) (uint64, error) {
-	offset := int64(zr.header.ClusterPtrPos) + int64(index*8)
+	offset := int64(zr.header.ClusterPtrPos) + int64(index)*8
 	buf := make([]byte, 8)
 	if _, err := zr.file.ReadAt(buf, offset); err != nil {
 		return 0, fmt.Errorf("failed to read cluster pointer at index %d: %w", index, err)
