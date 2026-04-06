@@ -119,12 +119,13 @@ func (h *ContentHandler) handleResource(w http.ResponseWriter, r *http.Request, 
 		mimeType = utils.GuessMimeType(resourcePath)
 	}
 
-	if mimeType != "" {
-		if mimeType == "text/html" && !strings.Contains(mimeType, "charset") {
-			mimeType += "; charset=utf-8"
-		}
-		w.Header().Set("Content-Type", mimeType)
+	if mimeType == "" {
+		mimeType = "application/octet-stream"
 	}
+	if mimeType == "text/html" {
+		mimeType += "; charset=utf-8"
+	}
+	w.Header().Set("Content-Type", mimeType)
 
 	httpFile, ok := file.(http.File)
 	if !ok {
