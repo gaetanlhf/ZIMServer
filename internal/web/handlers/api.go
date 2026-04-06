@@ -12,7 +12,6 @@ import (
 
 type APIHandler struct {
 	ArchiveService *services.ArchiveService
-	SearchService  *services.SearchService
 }
 
 type APISearchResponse struct {
