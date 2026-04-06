@@ -171,45 +171,6 @@ func (idx *Index) binarySearchTitle(r io.ReaderAt, count int, prefix string) int
 	return left
 }
 
-func calculateScore(query, title, path string) float64 {
-	score := 0.0
-
-	if title == query {
-		score += 10.0
-	}
-
-	if strings.HasPrefix(title, query) {
-		score += 5.0
-	}
-
-	if strings.Contains(title, query) {
-		score += 2.0
-	}
-
-	if strings.Contains(path, query) {
-		score += 0.5
-	}
-
-	queryWords := strings.Fields(query)
-	titleWords := strings.Fields(title)
-
-	matchCount := 0
-	for _, qw := range queryWords {
-		for _, tw := range titleWords {
-			if strings.Contains(tw, qw) {
-				matchCount++
-				break
-			}
-		}
-	}
-
-	if len(queryWords) > 0 {
-		score += float64(matchCount) / float64(len(queryWords))
-	}
-
-	return score
-}
-
 func sortResultsByScore(results []SearchResult) {
 	sort.Slice(results, func(i, j int) bool {
 		return results[i].Score > results[j].Score
