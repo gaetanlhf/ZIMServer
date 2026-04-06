@@ -106,7 +106,7 @@ func (s *ArchiveService) LoadZIM(path string) error {
 	// If still nothing, use default
 	if illustrationURL == "" {
 		illustrationURL = "/content/" + name + "/favicon.ico"
-		illustrationType = "image/png"
+		illustrationType = "image/x-icon"
 	}
 
 	archive.Metadata.IllustrationURL = illustrationURL
