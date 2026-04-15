@@ -89,24 +89,9 @@ func (zfs *ZIMFS) serveZimEntry(name string) (fs.File, error) {
 }
 
 func (zfs *ZIMFS) searchEntryFromURL(url string) (zimreader.DirectoryEntry, error) {
-	entry, err := zfs.reader.GetEntryByURL(zimreader.NamespaceContent, url)
-	if err == nil {
+	if entry, err := zfs.reader.FindEntry(url); err == nil {
 		return entry, nil
 	}
-
-	contentNamespaces := []byte{
-		zimreader.NamespaceWellKnown,
-		zimreader.NamespaceMetadata,
-		zimreader.NamespaceIndex,
-	}
-
-	for _, ns := range contentNamespaces {
-		entry, err := zfs.reader.GetEntryByURL(ns, url)
-		if err == nil {
-			return entry, nil
-		}
-	}
-
 	return nil, os.ErrNotExist
 }
 
