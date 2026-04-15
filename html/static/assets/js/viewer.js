@@ -2,6 +2,22 @@ let searchTimeout;
 let archiveName;
 let lastSearchResults = '';
 let connectionLostToast = null;
+let originalFaviconHref;
+
+function updateFaviconFromIframe(iframeDoc) {
+    const link = document.getElementById('pageFavicon');
+    if (!link) return;
+    if (!originalFaviconHref) {
+        originalFaviconHref = link.getAttribute('href');
+    }
+    const iconNode = iframeDoc.querySelector(
+        'link[rel~="icon" i], link[rel="shortcut icon" i], link[rel="apple-touch-icon" i]'
+    );
+    const href = iconNode && iconNode.href ? iconNode.href : originalFaviconHref;
+    if (href && link.href !== href) {
+        link.href = href;
+    }
+}
 
 function init(archive) {
     archiveName = archive;
@@ -50,6 +66,8 @@ function init(archive) {
 
             const archiveTitle = document.querySelector('.archive-name').textContent;
             document.title = iframeDoc.title + ' - ' + archiveTitle;
+
+            updateFaviconFromIframe(iframeDoc);
 
             iframeDoc.addEventListener('click', function() {
                 const searchResults = document.getElementById('searchResults');

@@ -1,9 +1,7 @@
 {{define "title"}}{{.ArchiveTitle}}{{end}}
 
 {{define "head"}}
-{{if .FaviconURL}}
-<link rel="icon" type="{{.FaviconType}}" href="{{.FaviconURL}}">
-{{end}}
+<link id="pageFavicon" rel="icon" type="{{.FaviconType}}" href="{{.FaviconURL}}">
 {{end}}
 
 {{define "body"}}

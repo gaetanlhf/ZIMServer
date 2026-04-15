@@ -98,17 +98,24 @@ func (s *ArchiveService) LoadZIM(path string) error {
 
 	illustrationURL, illustrationType := s.illustrationService.GetIllustration(archive, name)
 	faviconURL, faviconType := s.faviconService.GetFavicon(archive, name)
-	
-	// If no illustration found, fallback to favicon
+
 	if illustrationURL == "" {
 		illustrationURL = faviconURL
 		illustrationType = faviconType
 	}
-	
-	// If still nothing, use default
+	if faviconURL == "" {
+		faviconURL = illustrationURL
+		faviconType = illustrationType
+	}
+
+	defaultFaviconURL := "/content/" + name + "/favicon.ico"
 	if illustrationURL == "" {
-		illustrationURL = "/content/" + name + "/favicon.ico"
+		illustrationURL = defaultFaviconURL
 		illustrationType = "image/x-icon"
+	}
+	if faviconURL == "" {
+		faviconURL = defaultFaviconURL
+		faviconType = "image/x-icon"
 	}
 
 	archive.Metadata.IllustrationURL = illustrationURL
