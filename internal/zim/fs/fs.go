@@ -2,6 +2,7 @@ package fs
 
 import (
 	"bytes"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -61,31 +62,29 @@ func (zfs *ZIMFS) serveZimEntry(name string) (fs.File, error) {
 	if err != nil {
 		return nil, os.ErrNotExist
 	}
+	return zfs.OpenEntry(entry, name)
+}
 
+func (zfs *ZIMFS) OpenEntry(entry zimreader.DirectoryEntry, name string) (fs.File, error) {
 	resolvedEntry, err := zfs.reader.ResolveRedirect(entry)
 	if err != nil {
 		return nil, err
 	}
-
-	content, err := zfs.reader.GetContent(resolvedEntry)
+	readerAt, size, err := zfs.reader.GetContentReader(resolvedEntry)
 	if err != nil {
 		return nil, err
 	}
 
-	filename := filepath.Base(name)
-
-	zimFile := &File{
+	return &File{
 		fileInfo: &FileInfo{
 			isDir:   false,
 			modTime: time.Time{},
 			mode:    0444,
-			name:    filename,
-			size:    int64(len(content)),
+			name:    filepath.Base(name),
+			size:    size,
 		},
-		reader: bytes.NewReader(content),
-	}
-
-	return zimFile, nil
+		reader: io.NewSectionReader(readerAt, 0, size),
+	}, nil
 }
 
 func (zfs *ZIMFS) searchEntryFromURL(url string) (zimreader.DirectoryEntry, error) {

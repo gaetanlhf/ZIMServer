@@ -107,7 +107,7 @@ func (h *ContentHandler) handleResource(w http.ResponseWriter, r *http.Request, 
 		return
 	}
 
-	file, err := archive.FS.Open(resourcePath)
+	file, err := archive.FS.OpenEntry(entry, resourcePath)
 	if err != nil {
 		h.handle404(w, r, archive.Name, resourcePath)
 		return
