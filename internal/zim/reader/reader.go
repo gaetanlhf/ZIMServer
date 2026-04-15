@@ -11,7 +11,7 @@ import (
 
 var contentNamespaces = []byte{NamespaceContent}
 
-var auxiliaryNamespaces = []byte{NamespaceMetadata, NamespaceWellKnown, NamespaceIndex}
+var auxiliaryNamespaces = []byte{NamespaceWellKnown, NamespaceMetadata, NamespaceIndex}
 
 func NewReader(filename string) (*ZIMReader, error) {
 	if mapped, err := mmap.Open(filename); err == nil {
