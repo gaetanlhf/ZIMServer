@@ -6,9 +6,11 @@ import (
 	"io"
 )
 
+const headerSize = 80
+
 func readHeader(r io.ReaderAt) (*Header, error) {
-	buf := make([]byte, 80)
-	if _, err := r.ReadAt(buf, 0); err != nil {
+	var buf [headerSize]byte
+	if _, err := r.ReadAt(buf[:], 0); err != nil && err != io.EOF {
 		return nil, fmt.Errorf("failed to read header: %w", err)
 	}
 
@@ -31,91 +33,59 @@ func readHeader(r io.ReaderAt) (*Header, error) {
 	if h.MagicNumber != MagicNumber {
 		return nil, fmt.Errorf("invalid magic number: got 0x%x, expected 0x%x", h.MagicNumber, MagicNumber)
 	}
-
-	if h.MajorVersion < 6 {
-		return nil, fmt.Errorf("unsupported ZIM version: %d.%d (minimum required version is 6.0)", h.MajorVersion, h.MinorVersion)
+	if h.MajorVersion != 6 {
+		return nil, fmt.Errorf("unsupported ZIM version %d.%d (only v6 is supported)", h.MajorVersion, h.MinorVersion)
+	}
+	if h.MimeListPos != headerSize {
+		return nil, fmt.Errorf("invalid header: MimeListPos %d (expected %d)", h.MimeListPos, headerSize)
+	}
+	if h.PathPtrPos < h.MimeListPos {
+		return nil, fmt.Errorf("invalid header: PathPtrPos %d precedes MimeListPos", h.PathPtrPos)
+	}
+	if h.ClusterPtrPos < h.MimeListPos {
+		return nil, fmt.Errorf("invalid header: ClusterPtrPos %d precedes MimeListPos", h.ClusterPtrPos)
+	}
+	if h.ChecksumPos != 0 && h.ChecksumPos < h.MimeListPos {
+		return nil, fmt.Errorf("invalid header: ChecksumPos %d precedes MimeListPos", h.ChecksumPos)
+	}
+	if h.ClusterCount > h.EntryCount {
+		return nil, fmt.Errorf("invalid header: ClusterCount %d exceeds EntryCount %d", h.ClusterCount, h.EntryCount)
+	}
+	if (h.EntryCount == 0) != (h.ClusterCount == 0) {
+		return nil, fmt.Errorf("invalid header: EntryCount and ClusterCount must both be zero or non-zero")
 	}
 
 	return h, nil
 }
 
-const maxMimeTypes = 1024
-
-func readMimeTypes(r io.ReaderAt, pos uint64) ([]string, error) {
+func readMimeTypes(r io.ReaderAt, pos, limit uint64) ([]string, error) {
+	const maxEntries = 1 << 16
 	var mimeTypes []string
 	offset := pos
-	buf := make([]byte, 512)
+	buf := make([]byte, 1024)
 
-	for len(mimeTypes) < maxMimeTypes {
+	for {
+		if offset >= limit {
+			return nil, fmt.Errorf("mime list overran section limit")
+		}
 		n, err := r.ReadAt(buf, int64(offset))
 		if err != nil && n == 0 {
-			return nil, fmt.Errorf("failed to read mime type: %w", err)
+			return nil, fmt.Errorf("failed to read mime list: %w", err)
 		}
-
 		end := 0
 		for end < n && buf[end] != 0 {
 			end++
 		}
-
 		if end == 0 {
-			break
+			return mimeTypes, nil
 		}
-
 		if end == n {
-			return nil, fmt.Errorf("mime type too long or not null-terminated at offset %d", offset)
+			return nil, fmt.Errorf("mime entry not terminated at offset %d", offset)
 		}
-
+		if len(mimeTypes) >= maxEntries {
+			return nil, fmt.Errorf("mime list exceeds %d entries", maxEntries)
+		}
 		mimeTypes = append(mimeTypes, string(buf[:end]))
 		offset += uint64(end + 1)
 	}
-
-	return mimeTypes, nil
-}
-
-func readPathPointers(r io.ReaderAt, pos uint64, count uint32) ([]uint64, error) {
-	size := uint64(count) * 8
-	buf := make([]byte, size)
-	if _, err := r.ReadAt(buf, int64(pos)); err != nil {
-		return nil, fmt.Errorf("failed to read path pointers: %w", err)
-	}
-
-	pointers := make([]uint64, count)
-	for i := uint32(0); i < count; i++ {
-		off := uint64(i) * 8
-		pointers[i] = binary.LittleEndian.Uint64(buf[off : off+8])
-	}
-
-	return pointers, nil
-}
-
-func readTitlePointers(r io.ReaderAt, pos uint64, count uint32) ([]uint32, error) {
-	size := uint64(count) * 4
-	buf := make([]byte, size)
-	if _, err := r.ReadAt(buf, int64(pos)); err != nil {
-		return nil, fmt.Errorf("failed to read title pointers: %w", err)
-	}
-
-	pointers := make([]uint32, count)
-	for i := uint32(0); i < count; i++ {
-		off := uint64(i) * 4
-		pointers[i] = binary.LittleEndian.Uint32(buf[off : off+4])
-	}
-
-	return pointers, nil
-}
-
-func readClusterPointers(r io.ReaderAt, pos uint64, count uint32) ([]uint64, error) {
-	size := uint64(count) * 8
-	buf := make([]byte, size)
-	if _, err := r.ReadAt(buf, int64(pos)); err != nil {
-		return nil, fmt.Errorf("failed to read cluster pointers: %w", err)
-	}
-
-	pointers := make([]uint64, count)
-	for i := uint32(0); i < count; i++ {
-		off := uint64(i) * 8
-		pointers[i] = binary.LittleEndian.Uint64(buf[off : off+8])
-	}
-
-	return pointers, nil
 }

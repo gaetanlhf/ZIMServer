@@ -1,6 +1,9 @@
 package reader
 
-import "io"
+import (
+	"io"
+	"sync"
+)
 
 const (
 	MagicNumber        = 0x44D495A
@@ -33,6 +36,9 @@ type Header struct {
 	LayoutPage    uint32
 	ChecksumPos   uint64
 }
+
+func (h *Header) HasMainPage() bool   { return h.MainPage != ^uint32(0) }
+func (h *Header) HasLayoutPage() bool { return h.LayoutPage != ^uint32(0) }
 
 type DirectoryEntry interface {
 	GetNamespace() byte
@@ -85,10 +91,16 @@ type Cluster struct {
 	reader      io.ReaderAt
 	offset      uint64
 	size        uint64
+	index       uint32
+	cache       *clusterCache
 }
 
 type ZIMReader struct {
-	file      io.ReaderAt
-	header    *Header
-	mimeTypes []string
+	file         io.ReaderAt
+	header       *Header
+	mimeTypes    []string
+	cache        *clusterCache
+	direntCache  *direntCache
+	pathGrid     *narrowDown
+	pathGridOnce sync.Once
 }
