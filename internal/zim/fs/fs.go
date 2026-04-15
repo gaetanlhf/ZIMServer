@@ -92,6 +92,9 @@ func (zfs *ZIMFS) searchEntryFromURL(url string) (zimreader.DirectoryEntry, erro
 	if entry, err := zfs.reader.FindEntry(url); err == nil {
 		return entry, nil
 	}
+	if entry, err := zfs.reader.FindAuxiliaryEntry(url); err == nil {
+		return entry, nil
+	}
 	return nil, os.ErrNotExist
 }
 

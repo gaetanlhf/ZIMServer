@@ -33,8 +33,8 @@ func readHeader(r io.ReaderAt) (*Header, error) {
 	if h.MagicNumber != MagicNumber {
 		return nil, fmt.Errorf("invalid magic number: got 0x%x, expected 0x%x", h.MagicNumber, MagicNumber)
 	}
-	if h.MajorVersion != 6 {
-		return nil, fmt.Errorf("unsupported ZIM version %d.%d (only v6 is supported)", h.MajorVersion, h.MinorVersion)
+	if h.MajorVersion != 6 || h.MinorVersion < 1 {
+		return nil, fmt.Errorf("unsupported ZIM version %d.%d (only v6.1+ is supported)", h.MajorVersion, h.MinorVersion)
 	}
 	if h.MimeListPos != headerSize {
 		return nil, fmt.Errorf("invalid header: MimeListPos %d (expected %d)", h.MimeListPos, headerSize)

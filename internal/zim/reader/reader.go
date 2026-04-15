@@ -9,7 +9,9 @@ import (
 	"golang.org/x/exp/mmap"
 )
 
-var contentNamespaces = []byte{NamespaceContent, NamespaceMetadata, NamespaceWellKnown, NamespaceIndex}
+var contentNamespaces = []byte{NamespaceContent}
+
+var auxiliaryNamespaces = []byte{NamespaceMetadata, NamespaceWellKnown, NamespaceIndex}
 
 func NewReader(filename string) (*ZIMReader, error) {
 	if mapped, err := mmap.Open(filename); err == nil {
@@ -35,7 +37,7 @@ func NewReader(filename string) (*ZIMReader, error) {
 func NewReaderFromReaderAt(r io.ReaderAt) (*ZIMReader, error) {
 	zr := &ZIMReader{
 		file:        r,
-		cache:       newClusterCache(defaultClusterCacheEntries),
+		cache:       newClusterCache(defaultClusterCacheEntries, defaultClusterCacheBytes),
 		direntCache: newDirentCache(defaultDirentCacheEntries),
 	}
 	header, err := readHeader(r)
@@ -131,12 +133,46 @@ func (zr *ZIMReader) GetEntryByIndex(index uint32) (DirectoryEntry, error) {
 }
 
 func (zr *ZIMReader) FindEntry(path string) (DirectoryEntry, error) {
-	for _, ns := range contentNamespaces {
+	if entry, err := zr.GetEntryByURL(NamespaceContent, path); err == nil {
+		return entry, nil
+	}
+	if _, stripped, err := parseLongPath(path); err == nil {
+		if entry, err := zr.GetEntryByURL(NamespaceContent, stripped); err == nil {
+			return entry, nil
+		}
+	}
+	return nil, fmt.Errorf("entry not found: %s", path)
+}
+
+func (zr *ZIMReader) FindAuxiliaryEntry(path string) (DirectoryEntry, error) {
+	for _, ns := range auxiliaryNamespaces {
 		if entry, err := zr.GetEntryByURL(ns, path); err == nil {
 			return entry, nil
 		}
 	}
 	return nil, fmt.Errorf("entry not found: %s", path)
+}
+
+func parseLongPath(longPath string) (byte, string, error) {
+	if longPath == "" {
+		return 0, "", fmt.Errorf("cannot parse empty path")
+	}
+	i := 0
+	if longPath[0] == '/' {
+		i = 1
+	}
+	if i >= len(longPath) || longPath[i] == '/' {
+		return 0, "", fmt.Errorf("cannot parse path %q", longPath)
+	}
+	if i+1 < len(longPath) && longPath[i+1] != '/' {
+		return 0, "", fmt.Errorf("cannot parse path %q", longPath)
+	}
+	ns := longPath[i]
+	start := i + 2
+	if start > len(longPath) {
+		start = len(longPath)
+	}
+	return ns, longPath[start:], nil
 }
 
 func (zr *ZIMReader) entryAtIndex(index int) (DirectoryEntry, error) {

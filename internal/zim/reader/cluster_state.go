@@ -13,11 +13,33 @@ import (
 type clusterState struct {
 	mu          sync.Mutex
 	cluster     *Cluster
+	cache       *clusterCache
 	offsets     []uint64
 	decoder     io.ReadCloser
 	decoded     []byte
 	decodedUpto uint64
 	offsetsRead bool
+}
+
+func (s *clusterState) discard() int64 {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	freed := int64(len(s.decoded))
+	if s.decoder != nil {
+		s.decoder.Close()
+		s.decoder = nil
+	}
+	s.decoded = nil
+	s.decodedUpto = 0
+	s.offsets = nil
+	s.offsetsRead = false
+	return freed
+}
+
+func (s *clusterState) noteGrowth(delta int64) {
+	if delta > 0 && s.cache != nil {
+		s.cache.noteGrowth(delta)
+	}
 }
 
 func newClusterState(c *Cluster) *clusterState {
@@ -102,6 +124,7 @@ func (s *clusterState) ensureOffsets() error {
 	}
 	s.decoded = append(s.decoded, head...)
 	s.decodedUpto = uint64(offsetSize)
+	s.noteGrowth(int64(offsetSize))
 
 	first := decodeOffset(head, s.cluster.Extended)
 	if err := validateFirstOffset(first, offsetSize); err != nil {
@@ -116,6 +139,7 @@ func (s *clusterState) ensureOffsets() error {
 	}
 	s.decoded = append(s.decoded, tail...)
 	s.decodedUpto += uint64(len(tail))
+	s.noteGrowth(int64(len(tail)))
 
 	full := append(append([]byte{}, head...), tail...)
 	offsets, err := parseOffsetTable(full, count+1, s.cluster.Extended)
@@ -189,10 +213,12 @@ func (s *clusterState) advanceTo(target uint64) error {
 	}
 	s.decoded = append(s.decoded, buf...)
 	s.decodedUpto = target
+	s.noteGrowth(int64(need))
 	return nil
 }
 
 func (s *clusterState) resetDecoder() {
+	freed := int64(len(s.decoded))
 	if s.decoder != nil {
 		s.decoder.Close()
 		s.decoder = nil
@@ -201,6 +227,9 @@ func (s *clusterState) resetDecoder() {
 	s.decodedUpto = 0
 	s.offsets = nil
 	s.offsetsRead = false
+	if freed > 0 && s.cache != nil {
+		s.cache.bytes.Add(-freed)
+	}
 }
 
 func decodeOffset(buf []byte, extended bool) uint64 {

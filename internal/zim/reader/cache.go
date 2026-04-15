@@ -3,13 +3,19 @@ package reader
 import (
 	"container/list"
 	"sync"
+	"sync/atomic"
 )
 
-const defaultClusterCacheEntries = 64
+const (
+	defaultClusterCacheEntries = 16
+	defaultClusterCacheBytes   = 128 * 1024 * 1024
+)
 
 type clusterCache struct {
 	mu       sync.Mutex
 	capacity int
+	maxBytes int64
+	bytes    atomic.Int64
 	items    map[uint32]*list.Element
 	lru      *list.List
 }
@@ -19,15 +25,20 @@ type clusterCacheNode struct {
 	state *clusterState
 }
 
-func newClusterCache(capacity int) *clusterCache {
+func newClusterCache(capacity int, maxBytes int64) *clusterCache {
 	if capacity <= 0 {
 		capacity = defaultClusterCacheEntries
 	}
-	return &clusterCache{
+	if maxBytes <= 0 {
+		maxBytes = defaultClusterCacheBytes
+	}
+	c := &clusterCache{
 		capacity: capacity,
+		maxBytes: maxBytes,
 		items:    make(map[uint32]*list.Element),
 		lru:      list.New(),
 	}
+	return c
 }
 
 func (c *clusterCache) GetOrBuild(index uint32, factory func() (*clusterState, error)) (*clusterState, error) {
@@ -44,6 +55,7 @@ func (c *clusterCache) GetOrBuild(index uint32, factory func() (*clusterState, e
 	if err != nil {
 		return nil, err
 	}
+	state.cache = c
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -53,15 +65,33 @@ func (c *clusterCache) GetOrBuild(index uint32, factory func() (*clusterState, e
 	}
 	elem := c.lru.PushFront(&clusterCacheNode{index: index, state: state})
 	c.items[index] = elem
-	for c.lru.Len() > c.capacity {
+	c.evictLocked()
+	return state, nil
+}
+
+func (c *clusterCache) noteGrowth(delta int64) {
+	if delta <= 0 {
+		return
+	}
+	c.bytes.Add(delta)
+	if c.bytes.Load() <= c.maxBytes {
+		return
+	}
+	c.mu.Lock()
+	c.evictLocked()
+	c.mu.Unlock()
+}
+
+func (c *clusterCache) evictLocked() {
+	for c.lru.Len() > c.capacity || c.bytes.Load() > c.maxBytes {
 		oldest := c.lru.Back()
 		if oldest == nil {
-			break
+			return
 		}
 		node := oldest.Value.(*clusterCacheNode)
-		node.state.close()
+		freed := node.state.discard()
+		c.bytes.Add(-freed)
 		delete(c.items, node.index)
 		c.lru.Remove(oldest)
 	}
-	return state, nil
 }
