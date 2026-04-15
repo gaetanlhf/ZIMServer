@@ -2,7 +2,6 @@ package services
 
 import (
 	"fmt"
-	"log"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -83,7 +82,7 @@ func (s *ArchiveService) LoadZIM(path string) error {
 
 	indexMgr, err := index.NewManager(reader)
 	if err != nil {
-		log.Printf("No search index for %s: %v", name, err)
+		utils.Logf("No search index for %s: %v", name, err)
 	}
 
 	metadata := s.extractMetadata(reader, name)
@@ -202,12 +201,12 @@ func (s *ArchiveService) UnloadZIM(name string) error {
 	go func() {
 		time.Sleep(unloadGracePeriod)
 		if err := archive.Reader.Close(); err != nil {
-			log.Printf("Failed to close reader for %s: %v", name, err)
+			utils.Logf("Failed to close reader for %s: %v", name, err)
 		}
 	}()
 
 	zimFileName := name + ".zim"
-	log.Printf("%sℹ%s Unloaded ZIM: %s%s%s", colorCyan, colorReset, colorCyan, zimFileName, colorReset)
+	utils.Logf("%sℹ%s Unloaded ZIM: %s%s%s", colorCyan, colorReset, colorCyan, zimFileName, colorReset)
 	return nil
 }
 

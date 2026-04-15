@@ -33,6 +33,7 @@ func (s *clusterState) discard() int64 {
 	s.decodedUpto = 0
 	s.offsets = nil
 	s.offsetsRead = false
+	s.cache = nil
 	return freed
 }
 

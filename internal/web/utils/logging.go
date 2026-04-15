@@ -54,8 +54,9 @@ func isTerminal(f *os.File) bool {
 const logChannelSize = 1024
 
 var (
-	logCh   chan string
-	logOnce sync.Once
+	logCh        chan string
+	logOnce      sync.Once
+	logFallback  sync.Mutex
 )
 
 func startLogWriter() {
@@ -63,7 +64,7 @@ func startLogWriter() {
 		logCh = make(chan string, logChannelSize)
 		go func() {
 			for line := range logCh {
-				fmt.Fprintln(os.Stderr, line)
+				fmt.Fprintf(os.Stderr, "%s %s\n", time.Now().Format("2006/01/02 15:04:05"), line)
 			}
 		}()
 	})
@@ -73,8 +74,14 @@ func writeLog(line string) {
 	select {
 	case logCh <- line:
 	default:
-		fmt.Fprintln(os.Stderr, line)
+		logFallback.Lock()
+		fmt.Fprintf(os.Stderr, "%s %s\n", time.Now().Format("2006/01/02 15:04:05"), line)
+		logFallback.Unlock()
 	}
+}
+
+func Logf(format string, args ...any) {
+	writeLog(fmt.Sprintf(format, args...))
 }
 
 type responseWriter struct {

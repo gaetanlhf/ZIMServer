@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"path/filepath"
 	"strings"
@@ -21,7 +20,6 @@ type ContentHandler struct {
 	I18n                *i18n.I18n
 }
 
-var timeZero = time.Time{}
 
 func (h *ContentHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	originalPath := r.URL.Path
@@ -57,7 +55,7 @@ func (h *ContentHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		resolvedPage, err := archive.Reader.ResolveRedirect(mainPage)
 		if err != nil {
-			log.Printf("Failed to resolve main page for %s: %v", archiveName, err)
+			utils.Logf("Failed to resolve main page for %s: %v", archiveName, err)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
@@ -90,7 +88,7 @@ func (h *ContentHandler) handleResource(w http.ResponseWriter, r *http.Request, 
 	if entry.IsRedirect() {
 		resolvedEntry, err := archive.Reader.ResolveRedirect(entry)
 		if err != nil {
-			log.Printf("Redirect resolution error for %s: %v", resourcePath, err)
+			utils.Logf("Redirect resolution error for %s: %v", resourcePath, err)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
@@ -98,7 +96,7 @@ func (h *ContentHandler) handleResource(w http.ResponseWriter, r *http.Request, 
 		targetPath := resolvedEntry.GetPath()
 		redirectURL := fmt.Sprintf("/content/%s/%s", archive.Name, targetPath)
 
-		log.Printf("%s%s%s %sRedirect:%s %s -> %s",
+		utils.Logf("%s%s%s %sRedirect:%s %s -> %s",
 			utils.ColorBlue, utils.SymbolRedirect, utils.ColorReset,
 			utils.ColorGray, utils.ColorReset,
 			resourcePath, targetPath)
@@ -130,10 +128,10 @@ func (h *ContentHandler) handleResource(w http.ResponseWriter, r *http.Request, 
 	httpFile, ok := file.(http.File)
 	if !ok {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		log.Printf("File does not implement http.File for resource %s", resourcePath)
+		utils.Logf("File does not implement http.File for resource %s", resourcePath)
 		return
 	}
-	http.ServeContent(w, r, filepath.Base(resourcePath), timeZero, httpFile)
+	http.ServeContent(w, r, filepath.Base(resourcePath), time.Time{}, httpFile)
 }
 
 func (h *ContentHandler) handleIllustration(w http.ResponseWriter, r *http.Request, archive *services.Archive, archiveName string) {
@@ -187,6 +185,6 @@ func (h *ContentHandler) handle404(w http.ResponseWriter, r *http.Request, archi
 	w.Header().Set("Content-Language", lang)
 	w.WriteHeader(http.StatusNotFound)
 	if err := h.Templates.Render(w, "404", data); err != nil {
-		log.Printf("Template error: %v", err)
+		utils.Logf("Template error: %v", err)
 	}
 }

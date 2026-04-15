@@ -3,13 +3,13 @@ package handlers
 import (
 	"fmt"
 	"html/template"
-	"log"
 	"net/http"
 	"net/url"
 	"strings"
 
 	"github.com/gaetanlhf/ZIMServer/internal/web/i18n"
 	"github.com/gaetanlhf/ZIMServer/internal/web/services"
+	"github.com/gaetanlhf/ZIMServer/internal/web/utils"
 )
 
 type ViewerHandler struct {
@@ -75,7 +75,7 @@ func (h *ViewerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		resolvedPage, err := archive.Reader.ResolveRedirect(mainPage)
 		if err != nil {
-			log.Printf("Failed to resolve main page for %s: %v", archiveName, err)
+			utils.Logf("Failed to resolve main page for %s: %v", archiveName, err)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
@@ -116,7 +116,7 @@ func (h *ViewerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if err := h.Templates.Render(w, "viewer", data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		log.Printf("Template error: %v", err)
+		utils.Logf("Template error: %v", err)
 	}
 }
 
@@ -138,7 +138,7 @@ func (h *ViewerHandler) handleCatch(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Language", lang)
 		if err := h.Templates.Render(w, "catch", data); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
-			log.Printf("Template error: %v", err)
+			utils.Logf("Template error: %v", err)
 		}
 		return
 	}
@@ -178,7 +178,7 @@ func (h *ViewerHandler) handleCatch(w http.ResponseWriter, r *http.Request) {
 
 	if err := h.Templates.Render(w, "viewer", data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		log.Printf("Template error: %v", err)
+		utils.Logf("Template error: %v", err)
 	}
 }
 
@@ -210,6 +210,6 @@ func (h *ViewerHandler) handle404(w http.ResponseWriter, r *http.Request, archiv
 	w.Header().Set("Content-Language", lang)
 	w.WriteHeader(http.StatusNotFound)
 	if err := h.Templates.Render(w, "404", data); err != nil {
-		log.Printf("Template error: %v", err)
+		utils.Logf("Template error: %v", err)
 	}
 }

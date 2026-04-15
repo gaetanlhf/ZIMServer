@@ -2,12 +2,12 @@ package handlers
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/gaetanlhf/ZIMServer/internal/web/services"
+	"github.com/gaetanlhf/ZIMServer/internal/web/utils"
 )
 
 type APIHandler struct {
@@ -87,7 +87,7 @@ func (h *APIHandler) handleStatus(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(response); err != nil {
-		log.Printf("Failed to encode status response: %v", err)
+		utils.Logf("Failed to encode status response: %v", err)
 	}
 }
 
@@ -116,7 +116,7 @@ func (h *APIHandler) handleSearch(w http.ResponseWriter, r *http.Request, archiv
 
 	results, err := archive.IndexMgr.Search(query, limit)
 	if err != nil {
-		log.Printf("Search error: %v", err)
+		utils.Logf("Search error: %v", err)
 		http.Error(w, "Search failed", http.StatusInternalServerError)
 		return
 	}
@@ -136,20 +136,20 @@ func (h *APIHandler) handleSearch(w http.ResponseWriter, r *http.Request, archiv
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(response); err != nil {
-		log.Printf("Failed to encode search response: %v", err)
+		utils.Logf("Failed to encode search response: %v", err)
 	}
 }
 
 func (h *APIHandler) handleRandom(w http.ResponseWriter, r *http.Request, archive *services.Archive) {
 	if archive.IndexMgr == nil {
-		log.Printf("Random failed: IndexMgr is nil for archive %s", archive.Name)
+		utils.Logf("Random failed: IndexMgr is nil for archive %s", archive.Name)
 		http.Error(w, "Random not available for this archive", http.StatusServiceUnavailable)
 		return
 	}
 
 	entry, err := archive.IndexMgr.GetRandomArticle()
 	if err != nil {
-		log.Printf("Random error for archive %s: %v", archive.Name, err)
+		utils.Logf("Random error for archive %s: %v", archive.Name, err)
 		http.Error(w, "Random failed", http.StatusInternalServerError)
 		return
 	}
@@ -161,6 +161,6 @@ func (h *APIHandler) handleRandom(w http.ResponseWriter, r *http.Request, archiv
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(response); err != nil {
-		log.Printf("Failed to encode random response: %v", err)
+		utils.Logf("Failed to encode random response: %v", err)
 	}
 }

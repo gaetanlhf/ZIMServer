@@ -1,11 +1,11 @@
 package handlers
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/gaetanlhf/ZIMServer/internal/web/i18n"
 	"github.com/gaetanlhf/ZIMServer/internal/web/services"
+	"github.com/gaetanlhf/ZIMServer/internal/web/utils"
 )
 
 type HomeHandler struct {
@@ -50,6 +50,6 @@ func (h *HomeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if err := h.Templates.Render(w, "home", data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		log.Printf("Template error: %v", err)
+		utils.Logf("Template error: %v", err)
 	}
 }
