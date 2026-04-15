@@ -4,12 +4,27 @@ let lastSearchResults = '';
 let connectionLostToast = null;
 let originalFaviconHref;
 
-function updateFaviconFromIframe(iframeDoc) {
-    const link = document.getElementById('pageFavicon');
-    if (!link) return;
-    if (!originalFaviconHref) {
-        originalFaviconHref = link.getAttribute('href');
+function getOrCreateFaviconLink() {
+    let link = document.querySelector('link[rel~="icon"]');
+    if (!link) {
+        link = document.createElement('link');
+        link.rel = 'icon';
+        document.head.appendChild(link);
     }
+    return link;
+}
+
+function initFavicon() {
+    const link = getOrCreateFaviconLink();
+    const archiveIcon = document.getElementById('archiveIcon');
+    originalFaviconHref = archiveIcon ? archiveIcon.src : '';
+    if (originalFaviconHref && link.href !== originalFaviconHref) {
+        link.href = originalFaviconHref;
+    }
+}
+
+function updateFaviconFromIframe(iframeDoc) {
+    const link = getOrCreateFaviconLink();
     const iconNode = iframeDoc.querySelector(
         'link[rel~="icon" i], link[rel="shortcut icon" i], link[rel="apple-touch-icon" i]'
     );
@@ -25,6 +40,8 @@ function init(archive) {
     applyTheme();
 
     document.documentElement.classList.add('viewer-mode');
+
+    initFavicon();
 
     const iframe = document.getElementById('contentFrame');
 
