@@ -2,8 +2,7 @@ package index
 
 import (
 	"fmt"
-	"math/rand"
-	"time"
+	"math/rand/v2"
 
 	zimreader "github.com/gaetanlhf/ZIMServer/internal/zim/reader"
 )
@@ -14,13 +13,11 @@ type Manager struct {
 	titleV1 *Index
 	hasV0   bool
 	hasV1   bool
-	rng     *rand.Rand
 }
 
 func NewManager(reader *zimreader.ZIMReader) (*Manager, error) {
 	mgr := &Manager{
 		reader: reader,
-		rng:    rand.New(rand.NewSource(time.Now().UnixNano())),
 	}
 
 	titleV0, err := NewIndex(reader, IndexTypeTitleV0)
@@ -88,13 +85,13 @@ func (m *Manager) GetRandomArticle() (zimreader.DirectoryEntry, error) {
 			if m.titleV1.Size() == 0 {
 				return nil, fmt.Errorf("no articles in index")
 			}
-			randomPos := m.rng.Intn(m.titleV1.Size())
+			randomPos := rand.IntN(m.titleV1.Size())
 			entry, err = m.titleV1.GetEntry(randomPos)
 		} else if m.hasV0 {
 			if m.titleV0.Size() == 0 {
 				return nil, fmt.Errorf("no articles in index")
 			}
-			randomPos := m.rng.Intn(m.titleV0.Size())
+			randomPos := rand.IntN(m.titleV0.Size())
 			entry, err = m.titleV0.GetEntry(randomPos)
 		} else {
 			return nil, fmt.Errorf("no index available")
@@ -138,7 +135,7 @@ func (m *Manager) GetRandomArticles(count int) ([]zimreader.DirectoryEntry, erro
 	for len(entries) < count && attempt < maxAttempts {
 		attempt++
 
-		pos := m.rng.Intn(size)
+		pos := rand.IntN(size)
 		if used[pos] {
 			continue
 		}

@@ -17,23 +17,22 @@ func NewIndex(reader *zimreader.ZIMReader, indexType IndexType) (*Index, error) 
 	}
 
 	return &Index{
-		reader:     reader,
-		entry:      entry,
-		entryCount: 0,
+		reader: reader,
+		entry:  entry,
 	}, nil
 }
 
 func (idx *Index) Size() int {
-	if idx.entryCount > 0 {
-		return idx.entryCount
+	if cached := idx.entryCount.Load(); cached > 0 {
+		return int(cached)
 	}
-
 	_, size, err := idx.reader.GetContentReader(idx.entry)
 	if err != nil {
 		return 0
 	}
-	idx.entryCount = int(size) / 4
-	return idx.entryCount
+	count := int64(size) / 4
+	idx.entryCount.Store(count)
+	return int(count)
 }
 
 func (idx *Index) GetEntry(position int) (zimreader.DirectoryEntry, error) {
@@ -67,7 +66,8 @@ func (idx *Index) SearchByTitle(titlePrefix string, maxResults int) ([]SearchRes
 		return nil, err
 	}
 
-	idx.entryCount = int(size) / 4
+	count := int(size) / 4
+	idx.entryCount.Store(int64(count))
 
 	capacity := maxResults
 	if capacity <= 0 {
@@ -76,17 +76,17 @@ func (idx *Index) SearchByTitle(titlePrefix string, maxResults int) ([]SearchRes
 	results := make([]SearchResult, 0, capacity)
 	seen := make(map[string]bool)
 
-	start := idx.binarySearchTitle(readerAt, idx.entryCount, titlePrefix)
+	start := idx.binarySearchTitle(readerAt, count, titlePrefix)
 
 	chunkSize := 1024
 	buf := make([]byte, chunkSize*4)
 
-	for i := start; i < idx.entryCount; {
+	for i := start; i < count; {
 		if maxResults > 0 && len(results) >= maxResults {
 			break
 		}
 
-		remaining := idx.entryCount - i
+		remaining := count - i
 		toRead := chunkSize
 		if remaining < toRead {
 			toRead = remaining

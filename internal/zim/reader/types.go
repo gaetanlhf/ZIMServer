@@ -103,4 +103,6 @@ type ZIMReader struct {
 	direntCache  *direntCache
 	pathGrid     *narrowDown
 	pathGridOnce sync.Once
+	closeOnce    sync.Once
+	closeErr     error
 }

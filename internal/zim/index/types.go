@@ -1,6 +1,8 @@
 package index
 
 import (
+	"sync/atomic"
+
 	zimreader "github.com/gaetanlhf/ZIMServer/internal/zim/reader"
 )
 
@@ -14,7 +16,7 @@ const (
 type Index struct {
 	reader     *zimreader.ZIMReader
 	entry      zimreader.DirectoryEntry
-	entryCount int
+	entryCount atomic.Int64
 }
 
 type SearchResult struct {

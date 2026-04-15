@@ -92,10 +92,12 @@ func (zr *ZIMReader) clusterRegionEnd() uint64 {
 }
 
 func (zr *ZIMReader) Close() error {
-	if c, ok := zr.file.(io.Closer); ok {
-		return c.Close()
-	}
-	return nil
+	zr.closeOnce.Do(func() {
+		if c, ok := zr.file.(io.Closer); ok {
+			zr.closeErr = c.Close()
+		}
+	})
+	return zr.closeErr
 }
 
 func (zr *ZIMReader) GetHeader() *Header        { return zr.header }
