@@ -7,12 +7,15 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/gaetanlhf/ZIMServer/internal/web/utils"
 	zimfs "github.com/gaetanlhf/ZIMServer/internal/zim/fs"
 	"github.com/gaetanlhf/ZIMServer/internal/zim/index"
 	zimreader "github.com/gaetanlhf/ZIMServer/internal/zim/reader"
 )
+
+const unloadGracePeriod = 30 * time.Second
 
 const (
 	colorReset  = "\033[0m"
@@ -188,18 +191,20 @@ func extractMainCategory(tags string) string {
 
 func (s *ArchiveService) UnloadZIM(name string) error {
 	s.mu.Lock()
-	defer s.mu.Unlock()
-
 	archive, exists := s.archives[name]
 	if !exists {
+		s.mu.Unlock()
 		return fmt.Errorf("archive not found: %s", name)
 	}
-
-	if err := archive.Reader.Close(); err != nil {
-		log.Printf("Failed to close reader for %s: %v", name, err)
-	}
-
 	delete(s.archives, name)
+	s.mu.Unlock()
+
+	go func() {
+		time.Sleep(unloadGracePeriod)
+		if err := archive.Reader.Close(); err != nil {
+			log.Printf("Failed to close reader for %s: %v", name, err)
+		}
+	}()
 
 	zimFileName := name + ".zim"
 	log.Printf("%sℹ%s Unloaded ZIM: %s%s%s", colorCyan, colorReset, colorCyan, zimFileName, colorReset)
