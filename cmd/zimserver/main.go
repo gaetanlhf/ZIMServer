@@ -127,9 +127,11 @@ func runServer(host, port string, paths []string) {
 	logInfo("Listen on %shttp://%s:%s%s", colorCyan, host, port, colorReset)
 
 	httpServer := &http.Server{
-		Addr:     addr,
-		Handler:  server,
-		ErrorLog: log.New(os.Stderr, "", log.LstdFlags),
+		Addr:              addr,
+		Handler:           server,
+		ErrorLog:          log.New(os.Stderr, "", log.LstdFlags),
+		ReadHeaderTimeout: 15 * time.Second,
+		IdleTimeout:       60 * time.Second,
 	}
 
 	go func() {
