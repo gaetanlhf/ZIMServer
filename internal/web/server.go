@@ -91,8 +91,16 @@ func (s *Server) ListArchives() []*services.Archive {
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	utils.LoggingMiddleware(http.HandlerFunc(s.serveHTTP)).ServeHTTP(w, r)
+	withServerHeader(utils.LoggingMiddleware(http.HandlerFunc(s.serveHTTP))).ServeHTTP(w, r)
 }
+
+func withServerHeader(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Server", "ZIMServer")
+		h.ServeHTTP(w, r)
+	})
+}
+
 
 func (s *Server) serveHTTP(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.Path

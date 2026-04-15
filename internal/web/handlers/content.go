@@ -156,8 +156,7 @@ func (h *ContentHandler) handleIllustration(w http.ResponseWriter, r *http.Reque
 		}
 	}
 
-	// Fallback to serving a default illustration or a 404
-	http.NotFound(w, r)
+	h.handle404(w, r, archiveName, "favicon.ico")
 }
 
 func (h *ContentHandler) handle404(w http.ResponseWriter, r *http.Request, archiveName string, resourcePath string) {

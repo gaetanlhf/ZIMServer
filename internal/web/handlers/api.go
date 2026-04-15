@@ -34,6 +34,12 @@ type APIStatusResponse struct {
 	Archives []string `json:"archives"`
 }
 
+func writeJSONError(w http.ResponseWriter, status int, message string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	json.NewEncoder(w).Encode(map[string]string{"error": message})
+}
+
 func (h *APIHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	path := strings.TrimPrefix(r.URL.Path, "/api/")
 
@@ -45,7 +51,7 @@ func (h *APIHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	parts := strings.SplitN(path, "/", 2)
 
 	if len(parts) < 2 {
-		http.NotFound(w, r)
+		writeJSONError(w, http.StatusNotFound, "Not found")
 		return
 	}
 
@@ -54,7 +60,7 @@ func (h *APIHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	archive, exists := h.ArchiveService.GetArchive(archiveName)
 	if !exists {
-		http.NotFound(w, r)
+		writeJSONError(w, http.StatusNotFound, "Not found")
 		return
 	}
 
@@ -64,7 +70,7 @@ func (h *APIHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case "random":
 		h.handleRandom(w, r, archive)
 	default:
-		http.NotFound(w, r)
+		writeJSONError(w, http.StatusNotFound, "Not found")
 	}
 }
 
