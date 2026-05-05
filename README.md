@@ -11,6 +11,8 @@
 
 ## About
 
+[demo.webm](https://github.com/user-attachments/assets/7ff8de4f-52dd-416e-b683-f5ffb96d65fb)
+
 ZIMServer lets you serve ZIM files (Wikipedia, Wiktionary, etc.) through a clean Web interface.
 It is a streamlined alternative to kiwix-serve with a focus on usability and modern web standards.
 
